@@ -11,6 +11,8 @@ public class Adr
     public string AuthorId { get; set; } = string.Empty;
     public List<string> Tags { get; set; } = new();
     public int Version { get; set; } = 1;
+    public List<AdrApprover> Approvers { get; set; } = new();
+    public string? SupersededBy { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

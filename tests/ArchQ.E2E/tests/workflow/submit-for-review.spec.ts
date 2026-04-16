@@ -27,7 +27,7 @@ test.describe('ADR Workflow — Submit for Review', () => {
   test('API should transition Draft -> InReview with approvers', async ({ request }) => {
     const { slug, userId, adr } = await setupUserAndAdr(request);
 
-    const resp = await request.post(`http://localhost:5000/api/adrs/${adr.id}/transitions`, {
+    const resp = await request.post(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}/transitions`, {
       data: { targetStatus: 'InReview', approverIds: [userId] },
     });
     expect(resp.status()).toBe(200);
@@ -36,9 +36,9 @@ test.describe('ADR Workflow — Submit for Review', () => {
   });
 
   test('API should reject invalid transition Draft -> Approved', async ({ request }) => {
-    const { adr } = await setupUserAndAdr(request);
+    const { slug, adr } = await setupUserAndAdr(request);
 
-    const resp = await request.post(`http://localhost:5000/api/adrs/${adr.id}/transitions`, {
+    const resp = await request.post(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}/transitions`, {
       data: { targetStatus: 'Approved' },
     });
     expect(resp.status()).toBe(400);
@@ -47,9 +47,9 @@ test.describe('ADR Workflow — Submit for Review', () => {
   });
 
   test('API should require approvers for Draft -> InReview', async ({ request }) => {
-    const { adr } = await setupUserAndAdr(request);
+    const { slug, adr } = await setupUserAndAdr(request);
 
-    const resp = await request.post(`http://localhost:5000/api/adrs/${adr.id}/transitions`, {
+    const resp = await request.post(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}/transitions`, {
       data: { targetStatus: 'InReview', approverIds: [] },
     });
     expect(resp.status()).toBe(422);
@@ -61,17 +61,17 @@ test.describe('ADR Workflow — Submit for Review', () => {
     const { slug, userId, adr } = await setupUserAndAdr(request);
 
     // Submit for review
-    await request.post(`http://localhost:5000/api/adrs/${adr.id}/transitions`, {
+    await request.post(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}/transitions`, {
       data: { targetStatus: 'InReview', approverIds: [userId] },
     });
 
     // Reject
-    await request.post(`http://localhost:5000/api/adrs/${adr.id}/transitions`, {
+    await request.post(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}/transitions`, {
       data: { targetStatus: 'Rejected', reason: 'Needs more analysis' },
     });
 
     // Return to draft
-    const resp = await request.post(`http://localhost:5000/api/adrs/${adr.id}/transitions`, {
+    const resp = await request.post(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}/transitions`, {
       data: { targetStatus: 'Draft' },
     });
     expect(resp.status()).toBe(200);

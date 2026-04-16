@@ -35,6 +35,7 @@ public class ExceptionHandlingMiddleware
             ForbiddenException ex => (StatusCodes.Status403Forbidden, ex.Code, ex.Message),
             ConflictException ex => (StatusCodes.Status409Conflict, ex.Code, ex.Message),
             ValidationException ex => (StatusCodes.Status400BadRequest, "VALIDATION_ERROR", ex.Errors.FirstOrDefault()?.ErrorMessage ?? ex.Message),
+            ValidationFailedException ex => (StatusCodes.Status422UnprocessableEntity, ex.Code, ex.Message),
             DomainException ex => (StatusCodes.Status400BadRequest, ex.Code, ex.Message),
             _ => (StatusCodes.Status500InternalServerError, "INTERNAL_ERROR", "An unexpected error occurred.")
         };
