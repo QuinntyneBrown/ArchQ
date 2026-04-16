@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<ICommentRepository, CommentRepository>();
         services.AddScoped<IAttachmentRepository, AttachmentRepository>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+        services.AddScoped<ITagRepository, TagRepository>();
 
         return services;
     }
