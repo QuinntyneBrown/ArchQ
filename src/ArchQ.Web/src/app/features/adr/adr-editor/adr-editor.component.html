@@ -24,7 +24,7 @@
         [disabled]="saving() || readOnly()"
         (click)="saveDraft()"
       >
-        {{ saving() ? 'Saving...' : (editMode() ? 'Save Changes' : 'Save Draft') }}
+        {{ saving() ? 'Saving...' : 'Save Draft' }}
       </button>
       <button class="btn-submit" disabled>Submit for Review</button>
       <a routerLink="/adrs" class="cancel-link" data-testid="cancel-button">Cancel</a>
