@@ -13,8 +13,8 @@ using ArchQ.PerformanceTests.Infrastructure;
 //
 // Environment variables (optional overrides):
 //   COUCHBASE_CONNECTION_STRING  (default: couchbase://localhost)
-//   COUCHBASE_USERNAME           (default: Administrator)
-//   COUCHBASE_PASSWORD           (default: password123)
+//   COUCHBASE_USERNAME           (default: Developer)
+//   COUCHBASE_PASSWORD           (default: password)
 //   COUCHBASE_BUCKET             (default: archq)
 //
 // Usage:
@@ -23,6 +23,12 @@ using ArchQ.PerformanceTests.Infrastructure;
 //   dotnet run -c Release -- --filter *Search* # run Search benchmarks only
 //   dotnet run -c Release -- --list flat       # list all benchmarks
 // ──────────────────────────────────────────────────────────────
+
+// Step 1: Provision the benchmark scope ONCE before BenchmarkDotNet spawns child processes.
+// This avoids concurrent index creation timeouts across benchmark processes.
+Console.WriteLine("Provisioning Couchbase benchmark scope...");
+await CouchbaseFixture.Shared.ProvisionAsync();
+Console.WriteLine("Provisioning complete. Starting benchmarks...");
 
 var config = ManualConfig
     .CreateMinimumViable()
@@ -49,6 +55,5 @@ try
 }
 finally
 {
-    // Clean up the benchmark scope after all runs
     await CouchbaseFixture.Shared.DisposeAsync();
 }

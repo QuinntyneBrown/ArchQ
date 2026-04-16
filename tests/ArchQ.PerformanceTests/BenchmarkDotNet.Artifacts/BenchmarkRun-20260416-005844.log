@@ -1,0 +1,470 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Found 60 benchmark(s) in total *****
+// ***** Building 1 exe(s) in Parallel: Start   *****
+// start dotnet  restore /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /p:Optimize=true /p:IntermediateOutputPath="C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\obj\Release\net11.0/" /p:OutDir="C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0/" /p:OutputPath="C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0/" in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324
+// command took 2.52 sec and exited with 0
+// start dotnet  build -c Release --no-restore /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /p:Optimize=true /p:IntermediateOutputPath="C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\obj\Release\net11.0/" /p:OutDir="C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0/" /p:OutputPath="C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0/" --output "C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0/" in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324
+// command took 16.93 sec and exited with 0
+// ***** Done, took 00:00:19 (19.62 sec)   *****
+// Found 16 benchmarks:
+//   AdrBenchmarks.'ADR: Insert single document': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+//   AdrBenchmarks.'ADR: Get by ID (KV lookup)': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+//   AdrBenchmarks.'ADR: Update with CAS': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+//   AdrBenchmarks.'ADR: List with N1QL (no filters)': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+//   AdrBenchmarks.'ADR: List filtered by status': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+//   AdrBenchmarks.'ADR: List filtered by tags': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+//   AdrBenchmarks.'ADR: Count with filters': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+//   AdrBenchmarks.'ADR: Get max ADR number (N1QL)': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+//   AdrBenchmarks.'ADR: Insert single document': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=50]
+//   AdrBenchmarks.'ADR: Get by ID (KV lookup)': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=50]
+//   AdrBenchmarks.'ADR: Update with CAS': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=50]
+//   AdrBenchmarks.'ADR: List with N1QL (no filters)': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=50]
+//   AdrBenchmarks.'ADR: List filtered by status': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=50]
+//   AdrBenchmarks.'ADR: List filtered by tags': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=50]
+//   AdrBenchmarks.'ADR: Count with filters': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=50]
+//   AdrBenchmarks.'ADR: Get max ADR number (N1QL)': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=50]
+
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: AdrBenchmarks.'ADR: Insert single document': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 5e8c642a-178f-4b73-8f31-5b280b407324.dll --anonymousPipes 1088 1064 --benchmarkName "ArchQ.PerformanceTests.Benchmarks.AdrBenchmarks.CreateAdr(SeedCount: 10)" --job "IterationCount=10, WarmupCount=3" --benchmarkId 0 in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 11.0.0 (11.0.26.10518), Arm64 RyuJIT AdvSIMD
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AdvSIMD,AES,CRC32,DP,RDM,SHA1,SHA256 VectorSize=128
+// Job: Job-VUNLWA(IterationCount=10, WarmupCount=3)
+
+
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.
+ ---> Couchbase.Core.Exceptions.AmbiguousTimeoutException: The query was timed out via the Token.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.IO.IOException: Unable to read data from the transport connection: The I/O operation has been aborted because of either a thread exit or an application request..
+ ---> System.Net.Sockets.SocketException (995): The I/O operation has been aborted because of either a thread exit or an application request.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   --- End of inner exception stack trace ---
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   at Couchbase.Query.QueryClient.QueryAsync[T](String statement, QueryOptions options)
+   at Couchbase.Cluster.<>c__DisplayClass48_0`1.<<QueryAsync>g__Func|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Couchbase.Core.Retry.RetryOrchestrator.RetryAsync[T](Func`1 send, IRequest request)
+   at Couchbase.Cluster.QueryAsync[T](String statement, QueryOptions options)
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.ExecuteWithRetryAsync(IScope scope, String statement, Int32 maxRetries) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 117
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.EnsureProvisionedAsync() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 67
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseBenchmarkBase.GlobalSetup() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseBenchmarkBase.cs:line 18
+   at BenchmarkDotNet.Helpers.AwaitHelper.GetResult(Task task)
+   at BenchmarkDotNet.Autogenerated.Runnable_0.<.ctor>b__3_0() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 193
+   at BenchmarkDotNet.Engines.EngineFactory.CreateReadyToRun(EngineParameters engineParameters)
+   at BenchmarkDotNet.Autogenerated.Runnable_0.Run(IHost host, String benchmarkName) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 177
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+-----------------------Context Info---------------------------
+Couchbase.Core.Exceptions.Query.QueryErrorContext
+
+   --- End of inner exception stack trace ---
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at BenchmarkDotNet.Autogenerated.UniqueProgramName.AfterAssemblyLoadingAttached(String[] args) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 57
+// AfterAll
+No Workload Results were obtained from the run.
+// Benchmark Process 26368 has exited with code -1.
+
+// ** Remained 59 (98.3%) benchmark(s) to run. Estimated finish 2026-04-16 2:25 (1h 24m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: AdrBenchmarks.'ADR: Get by ID (KV lookup)': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 5e8c642a-178f-4b73-8f31-5b280b407324.dll --anonymousPipes 1136 1060 --benchmarkName "ArchQ.PerformanceTests.Benchmarks.AdrBenchmarks.GetAdrById(SeedCount: 10)" --job "IterationCount=10, WarmupCount=3" --benchmarkId 1 in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 11.0.0 (11.0.26.10518), Arm64 RyuJIT AdvSIMD
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AdvSIMD,AES,CRC32,DP,RDM,SHA1,SHA256 VectorSize=128
+// Job: Job-DHCLZP(IterationCount=10, WarmupCount=3)
+
+
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.
+ ---> Couchbase.Core.Exceptions.AmbiguousTimeoutException: The query was timed out via the Token.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.IO.IOException: Unable to read data from the transport connection: The I/O operation has been aborted because of either a thread exit or an application request..
+ ---> System.Net.Sockets.SocketException (995): The I/O operation has been aborted because of either a thread exit or an application request.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   --- End of inner exception stack trace ---
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   at Couchbase.Query.QueryClient.QueryAsync[T](String statement, QueryOptions options)
+   at Couchbase.Cluster.<>c__DisplayClass48_0`1.<<QueryAsync>g__Func|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Couchbase.Core.Retry.RetryOrchestrator.RetryAsync[T](Func`1 send, IRequest request)
+   at Couchbase.Cluster.QueryAsync[T](String statement, QueryOptions options)
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.ExecuteWithRetryAsync(IScope scope, String statement, Int32 maxRetries) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 117
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.EnsureProvisionedAsync() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 67
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseBenchmarkBase.GlobalSetup() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseBenchmarkBase.cs:line 18
+   at BenchmarkDotNet.Helpers.AwaitHelper.GetResult(Task task)
+   at BenchmarkDotNet.Autogenerated.Runnable_1.<.ctor>b__3_0() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 391
+   at BenchmarkDotNet.Engines.EngineFactory.CreateReadyToRun(EngineParameters engineParameters)
+   at BenchmarkDotNet.Autogenerated.Runnable_1.Run(IHost host, String benchmarkName) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 375
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+-----------------------Context Info---------------------------
+Couchbase.Core.Exceptions.Query.QueryErrorContext
+
+   --- End of inner exception stack trace ---
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at BenchmarkDotNet.Autogenerated.UniqueProgramName.AfterAssemblyLoadingAttached(String[] args) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 57
+// AfterAll
+No Workload Results were obtained from the run.
+// Benchmark Process 11708 has exited with code -1.
+
+// ** Remained 58 (96.7%) benchmark(s) to run. Estimated finish 2026-04-16 2:22 (1h 20m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: AdrBenchmarks.'ADR: Update with CAS': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 5e8c642a-178f-4b73-8f31-5b280b407324.dll --anonymousPipes 1080 1060 --benchmarkName "ArchQ.PerformanceTests.Benchmarks.AdrBenchmarks.UpdateAdr(SeedCount: 10)" --job "IterationCount=10, WarmupCount=3" --benchmarkId 2 in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 11.0.0 (11.0.26.10518), Arm64 RyuJIT AdvSIMD
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AdvSIMD,AES,CRC32,DP,RDM,SHA1,SHA256 VectorSize=128
+// Job: Job-LXMNYV(IterationCount=10, WarmupCount=3)
+
+
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.
+ ---> Couchbase.Core.Exceptions.AmbiguousTimeoutException: The query was timed out via the Token.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.IO.IOException: Unable to read data from the transport connection: The I/O operation has been aborted because of either a thread exit or an application request..
+ ---> System.Net.Sockets.SocketException (995): The I/O operation has been aborted because of either a thread exit or an application request.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   --- End of inner exception stack trace ---
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   at Couchbase.Query.QueryClient.QueryAsync[T](String statement, QueryOptions options)
+   at Couchbase.Cluster.<>c__DisplayClass48_0`1.<<QueryAsync>g__Func|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Couchbase.Core.Retry.RetryOrchestrator.RetryAsync[T](Func`1 send, IRequest request)
+   at Couchbase.Cluster.QueryAsync[T](String statement, QueryOptions options)
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.ExecuteWithRetryAsync(IScope scope, String statement, Int32 maxRetries) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 117
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.EnsureProvisionedAsync() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 67
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseBenchmarkBase.GlobalSetup() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseBenchmarkBase.cs:line 18
+   at BenchmarkDotNet.Helpers.AwaitHelper.GetResult(Task task)
+   at BenchmarkDotNet.Autogenerated.Runnable_2.<.ctor>b__3_0() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 589
+   at BenchmarkDotNet.Engines.EngineFactory.CreateReadyToRun(EngineParameters engineParameters)
+   at BenchmarkDotNet.Autogenerated.Runnable_2.Run(IHost host, String benchmarkName) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 573
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+-----------------------Context Info---------------------------
+Couchbase.Core.Exceptions.Query.QueryErrorContext
+
+   --- End of inner exception stack trace ---
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at BenchmarkDotNet.Autogenerated.UniqueProgramName.AfterAssemblyLoadingAttached(String[] args) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 57
+// AfterAll
+No Workload Results were obtained from the run.
+// Benchmark Process 3708 has exited with code -1.
+
+// ** Remained 57 (95.0%) benchmark(s) to run. Estimated finish 2026-04-16 2:21 (1h 18m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: AdrBenchmarks.'ADR: List with N1QL (no filters)': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 5e8c642a-178f-4b73-8f31-5b280b407324.dll --anonymousPipes 1060 1080 --benchmarkName "ArchQ.PerformanceTests.Benchmarks.AdrBenchmarks.ListAdrsNoFilter(SeedCount: 10)" --job "IterationCount=10, WarmupCount=3" --benchmarkId 3 in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 11.0.0 (11.0.26.10518), Arm64 RyuJIT AdvSIMD
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AdvSIMD,AES,CRC32,DP,RDM,SHA1,SHA256 VectorSize=128
+// Job: Job-UOFXZT(IterationCount=10, WarmupCount=3)
+
+
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.
+ ---> Couchbase.Core.Exceptions.AmbiguousTimeoutException: The query was timed out via the Token.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.IO.IOException: Unable to read data from the transport connection: The I/O operation has been aborted because of either a thread exit or an application request..
+ ---> System.Net.Sockets.SocketException (995): The I/O operation has been aborted because of either a thread exit or an application request.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   --- End of inner exception stack trace ---
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   at Couchbase.Query.QueryClient.QueryAsync[T](String statement, QueryOptions options)
+   at Couchbase.Cluster.<>c__DisplayClass48_0`1.<<QueryAsync>g__Func|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Couchbase.Core.Retry.RetryOrchestrator.RetryAsync[T](Func`1 send, IRequest request)
+   at Couchbase.Cluster.QueryAsync[T](String statement, QueryOptions options)
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.ExecuteWithRetryAsync(IScope scope, String statement, Int32 maxRetries) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 117
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.EnsureProvisionedAsync() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 67
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseBenchmarkBase.GlobalSetup() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseBenchmarkBase.cs:line 18
+   at BenchmarkDotNet.Helpers.AwaitHelper.GetResult(Task task)
+   at BenchmarkDotNet.Autogenerated.Runnable_3.<.ctor>b__3_0() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 787
+   at BenchmarkDotNet.Engines.EngineFactory.CreateReadyToRun(EngineParameters engineParameters)
+   at BenchmarkDotNet.Autogenerated.Runnable_3.Run(IHost host, String benchmarkName) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 771
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+-----------------------Context Info---------------------------
+Couchbase.Core.Exceptions.Query.QueryErrorContext
+
+   --- End of inner exception stack trace ---
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at BenchmarkDotNet.Autogenerated.UniqueProgramName.AfterAssemblyLoadingAttached(String[] args) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 57
+// AfterAll
+No Workload Results were obtained from the run.
+// Benchmark Process 38960 has exited with code -1.
+
+// ** Remained 56 (93.3%) benchmark(s) to run. Estimated finish 2026-04-16 2:21 (1h 16m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: AdrBenchmarks.'ADR: List filtered by status': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 5e8c642a-178f-4b73-8f31-5b280b407324.dll --anonymousPipes 1240 1088 --benchmarkName "ArchQ.PerformanceTests.Benchmarks.AdrBenchmarks.ListAdrsFilteredByStatus(SeedCount: 10)" --job "IterationCount=10, WarmupCount=3" --benchmarkId 4 in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 11.0.0 (11.0.26.10518), Arm64 RyuJIT AdvSIMD
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AdvSIMD,AES,CRC32,DP,RDM,SHA1,SHA256 VectorSize=128
+// Job: Job-KHDDGZ(IterationCount=10, WarmupCount=3)
+
+
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.
+ ---> Couchbase.Core.Exceptions.AmbiguousTimeoutException: The query was timed out via the Token.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.IO.IOException: Unable to read data from the transport connection: The I/O operation has been aborted because of either a thread exit or an application request..
+ ---> System.Net.Sockets.SocketException (995): The I/O operation has been aborted because of either a thread exit or an application request.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   --- End of inner exception stack trace ---
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   at Couchbase.Query.QueryClient.QueryAsync[T](String statement, QueryOptions options)
+   at Couchbase.Cluster.<>c__DisplayClass48_0`1.<<QueryAsync>g__Func|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Couchbase.Core.Retry.RetryOrchestrator.RetryAsync[T](Func`1 send, IRequest request)
+   at Couchbase.Cluster.QueryAsync[T](String statement, QueryOptions options)
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.ExecuteWithRetryAsync(IScope scope, String statement, Int32 maxRetries) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 117
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.EnsureProvisionedAsync() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 67
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseBenchmarkBase.GlobalSetup() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseBenchmarkBase.cs:line 18
+   at BenchmarkDotNet.Helpers.AwaitHelper.GetResult(Task task)
+   at BenchmarkDotNet.Autogenerated.Runnable_4.<.ctor>b__3_0() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 985
+   at BenchmarkDotNet.Engines.EngineFactory.CreateReadyToRun(EngineParameters engineParameters)
+   at BenchmarkDotNet.Autogenerated.Runnable_4.Run(IHost host, String benchmarkName) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 969
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+-----------------------Context Info---------------------------
+Couchbase.Core.Exceptions.Query.QueryErrorContext
+
+   --- End of inner exception stack trace ---
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at BenchmarkDotNet.Autogenerated.UniqueProgramName.AfterAssemblyLoadingAttached(String[] args) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 57
+// AfterAll
+No Workload Results were obtained from the run.
+// Benchmark Process 41688 has exited with code -1.
+
+// ** Remained 55 (91.7%) benchmark(s) to run. Estimated finish 2026-04-16 2:21 (1h 15m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: AdrBenchmarks.'ADR: List filtered by tags': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 5e8c642a-178f-4b73-8f31-5b280b407324.dll --anonymousPipes 1216 1108 --benchmarkName "ArchQ.PerformanceTests.Benchmarks.AdrBenchmarks.ListAdrsFilteredByTags(SeedCount: 10)" --job "IterationCount=10, WarmupCount=3" --benchmarkId 5 in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 11.0.0 (11.0.26.10518), Arm64 RyuJIT AdvSIMD
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AdvSIMD,AES,CRC32,DP,RDM,SHA1,SHA256 VectorSize=128
+// Job: Job-GPEQOW(IterationCount=10, WarmupCount=3)
+
+
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.
+ ---> Couchbase.Core.Exceptions.AmbiguousTimeoutException: The query was timed out via the Token.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.IO.IOException: Unable to read data from the transport connection: The I/O operation has been aborted because of either a thread exit or an application request..
+ ---> System.Net.Sockets.SocketException (995): The I/O operation has been aborted because of either a thread exit or an application request.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   --- End of inner exception stack trace ---
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   at Couchbase.Query.QueryClient.QueryAsync[T](String statement, QueryOptions options)
+   at Couchbase.Cluster.<>c__DisplayClass48_0`1.<<QueryAsync>g__Func|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Couchbase.Core.Retry.RetryOrchestrator.RetryAsync[T](Func`1 send, IRequest request)
+   at Couchbase.Cluster.QueryAsync[T](String statement, QueryOptions options)
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.ExecuteWithRetryAsync(IScope scope, String statement, Int32 maxRetries) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 117
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.EnsureProvisionedAsync() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 67
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseBenchmarkBase.GlobalSetup() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseBenchmarkBase.cs:line 18
+   at BenchmarkDotNet.Helpers.AwaitHelper.GetResult(Task task)
+   at BenchmarkDotNet.Autogenerated.Runnable_5.<.ctor>b__3_0() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 1183
+   at BenchmarkDotNet.Engines.EngineFactory.CreateReadyToRun(EngineParameters engineParameters)
+   at BenchmarkDotNet.Autogenerated.Runnable_5.Run(IHost host, String benchmarkName) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 1167
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+-----------------------Context Info---------------------------
+Couchbase.Core.Exceptions.Query.QueryErrorContext
+
+   --- End of inner exception stack trace ---
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at BenchmarkDotNet.Autogenerated.UniqueProgramName.AfterAssemblyLoadingAttached(String[] args) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\5e8c642a-178f-4b73-8f31-5b280b407324.notcs:line 57
+// AfterAll
+No Workload Results were obtained from the run.
+// Benchmark Process 42260 has exited with code -1.
+
+// ** Remained 54 (90.0%) benchmark(s) to run. Estimated finish 2026-04-16 2:20 (1h 13m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: AdrBenchmarks.'ADR: Count with filters': Job-TIARPN(IterationCount=10, WarmupCount=3) [SeedCount=10]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 5e8c642a-178f-4b73-8f31-5b280b407324.dll --anonymousPipes 1076 1104 --benchmarkName "ArchQ.PerformanceTests.Benchmarks.AdrBenchmarks.CountAdrsFiltered(SeedCount: 10)" --job "IterationCount=10, WarmupCount=3" --benchmarkId 6 in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\bin\Release\net11.0\5e8c642a-178f-4b73-8f31-5b280b407324\bin\Release\net11.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 11.0.0 (11.0.26.10518), Arm64 RyuJIT AdvSIMD
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AdvSIMD,AES,CRC32,DP,RDM,SHA1,SHA256 VectorSize=128
+// Job: Job-QPJHWL(IterationCount=10, WarmupCount=3)
+
+
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.
+ ---> Couchbase.Core.Exceptions.AmbiguousTimeoutException: The query was timed out via the Token.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.Threading.Tasks.TaskCanceledException: The operation was canceled.
+ ---> System.IO.IOException: Unable to read data from the transport connection: The I/O operation has been aborted because of either a thread exit or an application request..
+ ---> System.Net.Sockets.SocketException (995): The I/O operation has been aborted because of either a thread exit or an application request.
+   --- End of inner exception stack trace ---
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Int32>.GetResult(Int16 token)
+   at System.Net.Http.HttpConnection.InitialFillAsync(Boolean async)
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnection.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.DiagnosticsHandler.SendAsyncCore(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpClient.HandleFailure(Exception e, Boolean telemetryStarted, HttpResponseMessage response, CancellationTokenSource cts, CancellationToken cancellationToken, CancellationTokenSource pendingRequestsCts)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   --- End of inner exception stack trace ---
+   at Couchbase.Query.QueryClient.ExecuteQuery[T](QueryOptions options, ITypeSerializer serializer, IRequestSpan span)
+   at Couchbase.Query.QueryClient.QueryAsync[T](String statement, QueryOptions options)
+   at Couchbase.Cluster.<>c__DisplayClass48_0`1.<<QueryAsync>g__Func|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Couchbase.Core.Retry.RetryOrchestrator.RetryAsync[T](Func`1 send, IRequest request)
+   at Couchbase.Cluster.QueryAsync[T](String statement, QueryOptions options)
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.ExecuteWithRetryAsync(IScope scope, String statement, Int32 maxRetries) in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 117
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseFixture.EnsureProvisionedAsync() in C:\projects\ArchQ\tests\ArchQ.PerformanceTests\Infrastructure\CouchbaseFixture.cs:line 67
+   at ArchQ.PerformanceTests.Infrastructure.CouchbaseBenchmarkBase.

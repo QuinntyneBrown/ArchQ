@@ -3,9 +3,9 @@ using BenchmarkDotNet.Attributes;
 namespace ArchQ.PerformanceTests.Infrastructure;
 
 /// <summary>
-/// Base class for all Couchbase benchmarks. Handles one-time scope provisioning
-/// via GlobalSetup/GlobalCleanup so each benchmark class gets a ready-to-use
-/// connection against a real Couchbase database.
+/// Base class for all Couchbase benchmarks. The scope is already provisioned
+/// by Program.cs before BenchmarkDotNet launches child processes.
+/// Each benchmark just connects and seeds its own test data.
 /// </summary>
 public abstract class CouchbaseBenchmarkBase
 {
@@ -15,7 +15,8 @@ public abstract class CouchbaseBenchmarkBase
     [GlobalSetup]
     public async Task GlobalSetup()
     {
-        await Fixture.EnsureProvisionedAsync();
+        // Verify connectivity — the scope is already provisioned by Program.cs
+        await Fixture.Context.GetBucketAsync();
         await SetupAsync();
     }
 

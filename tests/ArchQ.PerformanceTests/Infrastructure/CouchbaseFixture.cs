@@ -7,8 +7,10 @@ using Microsoft.Extensions.Options;
 namespace ArchQ.PerformanceTests.Infrastructure;
 
 /// <summary>
-/// Manages a real Couchbase connection and a dedicated benchmark scope
-/// that is provisioned once and torn down after all benchmarks complete.
+/// Manages a real Couchbase connection for benchmarks.
+/// Provisioning (scope/collection/index creation) is done once in Program.cs
+/// before BenchmarkDotNet launches child processes. Each child process
+/// just connects to the already-provisioned scope.
 /// </summary>
 public sealed class CouchbaseFixture : IAsyncDisposable
 {
@@ -17,15 +19,15 @@ public sealed class CouchbaseFixture : IAsyncDisposable
     public static CouchbaseFixture Shared => Instance.Value;
 
     public CouchbaseContext Context { get; }
-    public string TenantSlug { get; } = $"bench_{DateTime.UtcNow:yyyyMMddHHmmss}";
+    public string TenantSlug { get; } = "bench_perf";
 
-    private static readonly string[] CollectionNames =
+    private static readonly string[] TenantCollections =
     [
         "users", "adrs", "adr_versions", "meeting_notes", "notes",
         "comments", "attachments_meta", "audit", "tags", "config"
     ];
 
-    private bool _provisioned;
+    private static readonly string[] SystemCollections = ["audit", "tenants", "global_users"];
 
     private CouchbaseFixture()
     {
@@ -40,34 +42,32 @@ public sealed class CouchbaseFixture : IAsyncDisposable
         Context = new CouchbaseContext(Options.Create(config));
     }
 
-    public async Task EnsureProvisionedAsync()
+    /// <summary>
+    /// Called ONCE in Program.cs (main process) before BenchmarkDotNet starts.
+    /// Creates scope, collections, and indexes. Must complete before any child process runs.
+    /// </summary>
+    public async Task ProvisionAsync()
     {
-        if (_provisioned) return;
-
         var bucket = await Context.GetBucketAsync();
-        var collectionManager = bucket.Collections;
+        var mgr = bucket.Collections;
 
-        try { await collectionManager.CreateScopeAsync(TenantSlug); }
-        catch (Exception ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)) { }
+        // Create tenant scope + collections
+        await CreateScopeAndCollections(mgr, TenantSlug, TenantCollections);
 
-        foreach (var name in CollectionNames)
+        // Create _system scope for AuditRepository
+        await CreateScopeAndCollections(mgr, "_system", SystemCollections);
+
+        // Wait for collections to be queryable
+        await Task.Delay(5000);
+
+        // Create indexes on tenant scope — one at a time, with retry
+        var tenantScope = bucket.Scope(TenantSlug);
+        foreach (var name in TenantCollections)
         {
-            try { await collectionManager.CreateCollectionAsync(TenantSlug, name, new CreateCollectionSettings()); }
-            catch (Exception ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)) { }
+            await CreateIndexWithRetry(tenantScope, $"CREATE PRIMARY INDEX IF NOT EXISTS ON `{name}`");
         }
 
-        // Wait for collections to be ready
-        await Task.Delay(2000);
-
-        var scope = bucket.Scope(TenantSlug);
-        foreach (var name in CollectionNames)
-        {
-            var query = $"CREATE PRIMARY INDEX IF NOT EXISTS ON `{name}`";
-            await scope.QueryAsync<dynamic>(query, new QueryOptions());
-        }
-
-        // Secondary indexes needed by benchmarks
-        var indexes = new (string Collection, string IndexName, string Field)[]
+        var secondaryIndexes = new (string Collection, string IndexName, string Field)[]
         {
             ("users", "idx_bench_users_email", "email"),
             ("adrs", "idx_bench_adrs_status", "status"),
@@ -77,25 +77,65 @@ public sealed class CouchbaseFixture : IAsyncDisposable
             ("comments", "idx_bench_comments_adrId", "adrId"),
         };
 
-        foreach (var (collection, indexName, field) in indexes)
+        foreach (var (collection, indexName, field) in secondaryIndexes)
         {
-            var q = $"CREATE INDEX `{indexName}` IF NOT EXISTS ON `{collection}`(`{field}`)";
-            await scope.QueryAsync<dynamic>(q, new QueryOptions());
+            await CreateIndexWithRetry(tenantScope, $"CREATE INDEX `{indexName}` IF NOT EXISTS ON `{collection}`(`{field}`)");
         }
 
-        // Wait for indexes to build
-        await Task.Delay(3000);
+        // Create indexes on _system scope
+        var systemScope = bucket.Scope("_system");
+        await CreateIndexWithRetry(systemScope, "CREATE PRIMARY INDEX IF NOT EXISTS ON `audit`");
+        await CreateIndexWithRetry(systemScope, "CREATE INDEX `idx_bench_sys_audit_ts` IF NOT EXISTS ON `audit`(`timestamp`)");
 
-        _provisioned = true;
+        // Wait for all indexes to finish building
+        await Task.Delay(10000);
+    }
+
+    private static async Task CreateScopeAndCollections(
+        ICouchbaseCollectionManager mgr, string scopeName, IEnumerable<string> collections)
+    {
+        try { await mgr.CreateScopeAsync(scopeName); }
+        catch { /* scope may already exist */ }
+
+        foreach (var name in collections)
+        {
+            try { await mgr.CreateCollectionAsync(scopeName, name, new CreateCollectionSettings()); }
+            catch { /* collection may already exist */ }
+        }
+    }
+
+    private static async Task CreateIndexWithRetry(Couchbase.KeyValue.IScope scope, string statement)
+    {
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            try
+            {
+                var options = new QueryOptions().Timeout(TimeSpan.FromSeconds(60));
+                await scope.QueryAsync<dynamic>(statement, options);
+                return;
+            }
+            catch (Exception ex) when (
+                ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
+                || ex.InnerException?.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return; // Index exists — done
+            }
+            catch when (attempt < 9)
+            {
+                // Transient error (build in progress, timeout, etc.) — wait and retry
+                await Task.Delay(5000 * (attempt + 1));
+            }
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
-        // Drop the benchmark scope to clean up
         try
         {
             var bucket = await Context.GetBucketAsync();
-            await bucket.Collections.DropScopeAsync(TenantSlug);
+            try { await bucket.Collections.DropScopeAsync(TenantSlug); } catch { }
+            try { await bucket.Collections.DropScopeAsync("_system"); } catch { }
         }
         catch { /* best-effort cleanup */ }
 
