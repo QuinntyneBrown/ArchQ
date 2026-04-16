@@ -12,13 +12,15 @@
   background-color: #1A1D27;
   border: 1px solid #2E3142;
   border-radius: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 .brand {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin-bottom: 0.5rem;
 }
 .logo-icon {
   width: 1.75rem;
@@ -35,7 +37,7 @@ h2.subtitle {
   color: #9ca3af;
   font-size: 1rem;
   font-weight: 400;
-  margin: 0 0 1.5rem;
+  margin: 0;
 }
 .form-group {
   margin-bottom: 1rem;
@@ -102,7 +104,7 @@ input:focus {
 .btn-primary {
   width: 100%;
   padding: 0.625rem 1.25rem;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   background-color: #0062FF;
   color: #fff;
   border: none;
@@ -121,7 +123,6 @@ input:focus {
 }
 .sign-in-prompt {
   text-align: center;
-  margin-top: 1.25rem;
   font-size: 0.875rem;
   color: #9ca3af;
 }
