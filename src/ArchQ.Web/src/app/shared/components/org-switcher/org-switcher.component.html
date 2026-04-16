@@ -1,0 +1,43 @@
+<div class="org-switcher-wrapper">
+  <button
+    class="org-pill"
+    data-testid="org-switcher"
+    [class.has-multiple]="hasMultipleOrgs()"
+    [disabled]="switching()"
+    (click)="toggle()"
+  >
+    @if (switching()) {
+      <span class="switching-indicator" data-testid="switching-indicator">Switching...</span>
+    } @else {
+      <span class="org-avatar">{{ activeInitial() }}</span>
+      <span class="org-name" data-testid="active-org">{{ activeTenantName() }}</span>
+      @if (hasMultipleOrgs()) {
+        <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7 15 5 5 5-5"/>
+          <path d="m7 9 5-5 5 5"/>
+        </svg>
+      }
+    }
+  </button>
+
+  @if (isOpen()) {
+    <div class="org-dropdown" data-testid="org-dropdown">
+      @for (org of orgs(); track org.tenantSlug) {
+        <button
+          class="org-option"
+          data-testid="org-option"
+          [class.active]="org.tenantSlug === activeSlug()"
+          (click)="selectOrg(org.tenantSlug)"
+        >
+          <span class="org-option-avatar">{{ org.tenantDisplayName.charAt(0).toUpperCase() }}</span>
+          <span class="org-option-name">{{ org.tenantDisplayName }}</span>
+          @if (org.tenantSlug === activeSlug()) {
+            <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5"/>
+            </svg>
+          }
+        </button>
+      }
+    </div>
+  }
+</div>

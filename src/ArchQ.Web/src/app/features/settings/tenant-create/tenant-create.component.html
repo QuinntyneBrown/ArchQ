@@ -1,0 +1,60 @@
+<div class="tenant-create-container">
+  <h1>Create Organization</h1>
+
+  @if (errorMessage()) {
+    <div class="error-banner" data-testid="error-message">{{ errorMessage() }}</div>
+  }
+
+  <form (ngSubmit)="onSubmit()" novalidate>
+    <div class="form-group">
+      <label for="displayName">Display Name</label>
+      <input
+        id="displayName"
+        type="text"
+        [(ngModel)]="displayName"
+        name="displayName"
+        (ngModelChange)="onDisplayNameChange($event)"
+        data-testid="tenant-display-name-input"
+        placeholder="Enter organization name"
+      />
+      @if (displayNameError()) {
+        <div class="field-error" data-testid="display-name-error">{{ displayNameError() }}</div>
+      }
+    </div>
+
+    <div class="form-group">
+      <label for="slug">Slug</label>
+      <input
+        id="slug"
+        type="text"
+        [(ngModel)]="slug"
+        name="slug"
+        data-testid="tenant-slug-input"
+        placeholder="organization-slug"
+      />
+      <div class="slug-preview" data-testid="tenant-slug-preview">{{ slugPreview }}</div>
+      @if (slugError()) {
+        <div class="field-error" data-testid="slug-error">{{ slugError() }}</div>
+      }
+    </div>
+
+    <div class="form-actions">
+      <button
+        type="button"
+        data-testid="cancel-button"
+        (click)="onCancel()"
+        class="btn-secondary"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        data-testid="create-tenant-button"
+        [disabled]="submitting()"
+        class="btn-primary"
+      >
+        {{ submitting() ? 'Creating...' : 'Create Organization' }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,33 @@
+<div class="verify-container">
+  <div class="verify-card">
+    <div class="brand" data-testid="app-logo">
+      <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="22" x2="21" y2="22"></line>
+        <line x1="6" y1="18" x2="6" y2="11"></line>
+        <line x1="10" y1="18" x2="10" y2="11"></line>
+        <line x1="14" y1="18" x2="14" y2="11"></line>
+        <line x1="18" y1="18" x2="18" y2="11"></line>
+        <polygon points="12 2 20 7 4 7"></polygon>
+      </svg>
+      <span class="logo-text">ArchQ</span>
+    </div>
+
+    @if (loading()) {
+      <p class="status-text">Verifying your email...</p>
+    }
+
+    @if (verificationStatus()) {
+      <div class="success-banner" data-testid="verification-status">{{ verificationStatus() }}</div>
+    }
+
+    @if (verificationError()) {
+      <div class="error-banner" data-testid="verification-error">{{ verificationError() }}</div>
+    }
+
+    @if (!loading()) {
+      <p class="sign-in-prompt">
+        <a routerLink="/login" data-testid="sign-in-link">Sign in to your account</a>
+      </p>
+    }
+  </div>
+</div>

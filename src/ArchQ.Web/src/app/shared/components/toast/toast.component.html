@@ -1,0 +1,10 @@
+@if (visible()) {
+  <div
+    class="toast"
+    [class.toast-success]="toastType() === 'success'"
+    [class.toast-error]="toastType() === 'error'"
+    data-testid="toast-message"
+  >
+    {{ message() }}
+  </div>
+}

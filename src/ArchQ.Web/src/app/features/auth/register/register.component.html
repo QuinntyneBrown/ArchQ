@@ -1,0 +1,107 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="brand" data-testid="app-logo">
+      <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="22" x2="21" y2="22"></line>
+        <line x1="6" y1="18" x2="6" y2="11"></line>
+        <line x1="10" y1="18" x2="10" y2="11"></line>
+        <line x1="14" y1="18" x2="14" y2="11"></line>
+        <line x1="18" y1="18" x2="18" y2="11"></line>
+        <polygon points="12 2 20 7 4 7"></polygon>
+      </svg>
+      <span class="logo-text">ArchQ</span>
+    </div>
+    <h2 class="subtitle">Create your account</h2>
+
+    @if (errorMessage()) {
+      <div class="error-banner" data-testid="error-message">{{ errorMessage() }}</div>
+    }
+
+    @if (successMessage()) {
+      <div class="success-banner" data-testid="success-message">{{ successMessage() }}</div>
+    } @else {
+      <form (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input
+            id="fullName"
+            type="text"
+            [(ngModel)]="fullName"
+            name="fullName"
+            data-testid="full-name-input"
+            placeholder="John Smith"
+          />
+          @if (fullNameError()) {
+            <div class="field-error" data-testid="full-name-error">{{ fullNameError() }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            data-testid="email-input"
+            placeholder="you&#64;company.com"
+          />
+          @if (emailError()) {
+            <div class="field-error" data-testid="email-error">{{ emailError() }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            (ngModelChange)="onPasswordChange()"
+            data-testid="password-input"
+            placeholder="Minimum 8 characters"
+          />
+          <div class="password-strength" data-testid="password-strength">
+            <div
+              class="password-strength-bar"
+              [style.width.%]="passwordStrength()"
+              [style.background-color]="passwordStrengthColor()"
+            ></div>
+          </div>
+          @if (passwordError()) {
+            <div class="field-error" data-testid="password-error">{{ passwordError() }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="organizationName">Organization Name</label>
+          <input
+            id="organizationName"
+            type="text"
+            [(ngModel)]="organizationName"
+            name="organizationName"
+            data-testid="organization-name-input"
+            placeholder="Acme Corp"
+          />
+          @if (organizationError()) {
+            <div class="field-error" data-testid="organization-error">{{ organizationError() }}</div>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="btn-primary"
+          data-testid="create-account-button"
+          [disabled]="submitting()"
+        >
+          {{ submitting() ? 'Creating Account...' : 'Create Account' }}
+        </button>
+      </form>
+
+      <p class="sign-in-prompt">
+        Already have an account? <a routerLink="/login" data-testid="sign-in-link">Sign in</a>
+      </p>
+    }
+  </div>
+</div>

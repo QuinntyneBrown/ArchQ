@@ -1,0 +1,114 @@
+<div class="editor-container">
+  @if (readOnly()) {
+    <div class="readonly-banner" data-testid="readonly-banner">
+      This ADR is in "{{ existingAdr()?.status }}" status and cannot be edited.
+    </div>
+  }
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <a routerLink="/adrs" class="back-arrow" data-testid="back-button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </a>
+      <span class="top-bar-title">{{ editMode() ? 'Edit ADR' : 'New ADR' }}</span>
+      <span class="status-badge" data-testid="status-badge">{{ existingAdr()?.status || 'Draft' }}</span>
+    </div>
+    <div class="top-bar-right">
+      <button
+        class="btn-save"
+        data-testid="save-draft-button"
+        [disabled]="saving() || readOnly()"
+        (click)="saveDraft()"
+      >
+        {{ saving() ? 'Saving...' : (editMode() ? 'Save Changes' : 'Save Draft') }}
+      </button>
+      <button class="btn-submit" disabled>Submit for Review</button>
+      <a routerLink="/adrs" class="cancel-link" data-testid="cancel-button">Cancel</a>
+    </div>
+  </div>
+
+  <!-- Title Input -->
+  <div class="title-section">
+    <label for="adr-title" class="field-label">ADR Title</label>
+    <input
+      id="adr-title"
+      type="text"
+      [(ngModel)]="title"
+      name="title"
+      data-testid="adr-title-input"
+      placeholder="e.g., Use CQRS Pattern for Command/Query Separation"
+      class="title-input"
+    />
+  </div>
+
+  <!-- Mobile Tabs -->
+  <div class="mobile-tabs">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'edit'"
+      data-testid="edit-tab"
+      (click)="activeTab.set('edit')"
+    >Edit</button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'preview'"
+      data-testid="preview-tab"
+      (click)="activeTab.set('preview')"
+    >Preview</button>
+  </div>
+
+  <!-- Split Pane -->
+  <div class="split-pane">
+    <!-- Editor Pane -->
+    <div class="editor-pane" [class.hidden-mobile]="activeTab() === 'preview'">
+      <!-- Toolbar -->
+      <div class="toolbar" data-testid="markdown-toolbar">
+        <button class="toolbar-btn" title="Bold" (click)="insertMarkdown('bold')"><strong>B</strong></button>
+        <button class="toolbar-btn" title="Italic" (click)="insertMarkdown('italic')"><em>I</em></button>
+        <button class="toolbar-btn" title="Heading" (click)="insertMarkdown('heading')"><strong>H</strong></button>
+        <button class="toolbar-btn" title="Code" (click)="insertMarkdown('code')">&lt;&gt;</button>
+        <button class="toolbar-btn" title="Link" (click)="insertMarkdown('link')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+        </button>
+        <button class="toolbar-btn" title="List" (click)="insertMarkdown('list')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+        </button>
+        <button class="toolbar-btn" title="Image" (click)="insertMarkdown('image')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </button>
+      </div>
+      <textarea
+        #editorTextarea
+        class="markdown-editor"
+        [(ngModel)]="content"
+        name="content"
+        data-testid="markdown-edit-area"
+        placeholder="Write your ADR content in Markdown..."
+      ></textarea>
+    </div>
+
+    <!-- Preview Pane -->
+    <div class="preview-pane" [class.hidden-mobile]="activeTab() === 'edit'" data-testid="preview-pane">
+      <div class="preview-header">Preview</div>
+      <div class="preview-content markdown-body" [innerHTML]="renderedHtml()"></div>
+    </div>
+  </div>
+</div>

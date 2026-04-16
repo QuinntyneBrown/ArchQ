@@ -1,0 +1,182 @@
+<div class="adr-list-container">
+  <div class="adr-list-card">
+    <!-- Header -->
+    <div class="header-row">
+      <h1 class="heading" data-testid="page-title">Architecture Decision Records</h1>
+      <a routerLink="/adrs/new" class="btn-primary btn-new-desktop" data-testid="new-adr-button">+ New ADR</a>
+    </div>
+
+    <!-- Filters Row -->
+    <div class="filters-row">
+      <input
+        type="text"
+        class="search-input"
+        data-testid="search-input"
+        placeholder="Search ADRs..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+      />
+      <select
+        class="status-filter"
+        data-testid="status-filter"
+        [(ngModel)]="selectedStatus"
+        (ngModelChange)="onFilterChange()"
+      >
+        <option value="All">All</option>
+        <option value="Draft">Draft</option>
+        <option value="In Review">In Review</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+        <option value="Superseded">Superseded</option>
+      </select>
+    </div>
+
+    <!-- Mobile Filter Pills -->
+    <div class="filter-pills">
+      @for (status of statusOptions; track status) {
+        <button
+          class="pill"
+          [class.pill-active]="selectedStatus === status"
+          (click)="selectedStatus = status; onFilterChange()"
+        >{{ status }}</button>
+      }
+    </div>
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="loading-state">
+        <p class="muted-text">Loading ADRs...</p>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && !isSearchMode() && adrs().length === 0) {
+      <div class="empty-state">
+        <p class="muted-text">No ADRs found. Create your first Architecture Decision Record.</p>
+      </div>
+    }
+
+    <!-- Search Results -->
+    @if (!loading() && isSearchMode()) {
+      @if (searchResults().length === 0) {
+        <div class="empty-state">
+          <p class="muted-text">No results found for your search.</p>
+        </div>
+      } @else {
+        <div class="search-results-header">
+          <span class="muted-text">{{ searchTotalHits() }} result{{ searchTotalHits() !== 1 ? 's' : '' }} found</span>
+        </div>
+        <div class="search-results-list">
+          @for (result of searchResults(); track result.id) {
+            <div
+              class="search-result-item"
+              data-testid="search-result"
+              (click)="navigateToAdr(result.id)"
+            >
+              <div class="search-result-top">
+                <span class="card-number">{{ result.adrNumber }}</span>
+                <span class="status-badge" [ngClass]="getStatusClass(result.status)">{{ result.status }}</span>
+              </div>
+              <div class="search-result-title" [innerHTML]="result.title"></div>
+              @if (result.snippet) {
+                <div class="search-result-snippet" [innerHTML]="result.snippet"></div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Desktop Table -->
+    @if (!loading() && !isSearchMode() && adrs().length > 0) {
+      <div class="table-wrapper">
+        <table class="adr-table" data-testid="adr-table">
+          <thead>
+            <tr>
+              <th>Number</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Author</th>
+              <th>Modified</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (adr of adrs(); track adr.id) {
+              <tr
+                class="adr-row"
+                data-testid="adr-row"
+                (click)="navigateToAdr(adr.id)"
+              >
+                <td>
+                  <a
+                    [routerLink]="['/adrs', adr.id, 'edit']"
+                    class="adr-number-link"
+                    [attr.data-testid]="'adr-link-' + adr.adrNumber"
+                    (click)="$event.stopPropagation()"
+                  >{{ adr.adrNumber }}</a>
+                </td>
+                <td class="title-cell">{{ adr.title }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="getStatusClass(adr.status)">{{ adr.status }}</span>
+                </td>
+                <td>
+                  <div class="author-cell">
+                    <span class="author-avatar">{{ getInitials(adr.authorName) }}</span>
+                    <span class="author-name">{{ adr.authorName || 'Unknown' }}</span>
+                  </div>
+                </td>
+                <td class="date-cell">{{ formatDate(adr.updatedAt) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Mobile Cards -->
+    @if (!loading() && !isSearchMode() && adrs().length > 0) {
+      <div class="card-list">
+        @for (adr of adrs(); track adr.id) {
+          <div
+            class="adr-card"
+            data-testid="adr-card"
+            (click)="navigateToAdr(adr.id)"
+          >
+            <div class="card-top-row">
+              <span class="card-number">{{ adr.adrNumber }}</span>
+              <span class="status-badge" [ngClass]="getStatusClass(adr.status)">{{ adr.status }}</span>
+            </div>
+            <div class="card-title">{{ adr.title }}</div>
+            <div class="card-bottom-row">
+              <div class="author-cell">
+                <span class="author-avatar author-avatar-sm">{{ getInitials(adr.authorName) }}</span>
+                <span class="card-author">{{ adr.authorName || 'Unknown' }}</span>
+              </div>
+              <span class="card-date">{{ formatDate(adr.updatedAt) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Pagination -->
+    @if (!loading() && !isSearchMode() && (prevCursor() || nextCursor())) {
+      <div class="pagination-row">
+        <button
+          class="btn-page"
+          [disabled]="!prevCursor()"
+          (click)="loadPage(prevCursor()!)"
+        >Previous</button>
+        <span class="total-count">{{ totalCount() }} total</span>
+        <button
+          class="btn-page"
+          [disabled]="!nextCursor()"
+          (click)="loadPage(nextCursor()!)"
+        >Next</button>
+      </div>
+    }
+  </div>
+
+  <!-- Mobile FAB -->
+  <a routerLink="/adrs/new" class="fab" data-testid="new-adr-button-mobile">+</a>
+</div>
