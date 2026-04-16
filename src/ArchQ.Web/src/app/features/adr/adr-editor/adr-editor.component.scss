@@ -53,27 +53,22 @@
 .status-draft {
   color: #F59E0B;
   background-color: rgba(245, 158, 11, 0.125);
-  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 .status-in-review {
   color: #3B82F6;
   background-color: rgba(59, 130, 246, 0.125);
-  border: 1px solid rgba(59, 130, 246, 0.3);
 }
 .status-approved {
   color: #10B981;
   background-color: rgba(16, 185, 129, 0.125);
-  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 .status-rejected {
   color: #EF4444;
   background-color: rgba(239, 68, 68, 0.125);
-  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 .status-superseded {
   color: #9CA3AF;
   background-color: rgba(107, 114, 128, 0.125);
-  border: 1px solid rgba(156, 163, 175, 0.3);
 }
 .top-bar-right {
   display: flex;
