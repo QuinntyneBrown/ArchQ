@@ -8,7 +8,7 @@
 | 04 | [Organization Switching](04-organization-switching/README.md) | Complete | L2-004, L2-002 | Switch active tenant, scoped session context |
 | 05 | [Role Management](05-role-management/README.md) | Complete | L2-005, L2-006 | Assign/revoke Admin, Author, Reviewer, Viewer roles |
 | 06 | [ADR Creation](06-adr-creation/README.md) | Complete | L2-007, L2-009 | Create ADR with Markdown editor, template pre-population |
-| 07 | [ADR Editing](07-adr-editing/README.md) | Draft | L2-008 | Edit ADR content with revision tracking |
+| 07 | [ADR Editing](07-adr-editing/README.md) | Complete | L2-008 | Edit ADR content with revision tracking |
 | 08 | [ADR List & Browse](08-adr-list-browse/README.md) | Draft | L2-020, L2-028, L2-029 | List, filter, paginate ADRs with responsive layout |
 | 09 | [ADR Search](09-adr-search/README.md) | Draft | L2-019 | Full-text search via Couchbase FTS |
 | 10 | [ADR Workflow](10-adr-workflow/README.md) | Draft | L2-010, L2-011 | Status transitions, state machine, notifications |
