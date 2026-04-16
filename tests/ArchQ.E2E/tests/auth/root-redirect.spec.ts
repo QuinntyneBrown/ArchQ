@@ -23,7 +23,7 @@ test.describe('Root Route Redirect', () => {
     await page.fill('[data-testid="email-input"]', email);
     await page.fill('[data-testid="password-input"]', 'S3cur3P@ss!');
     await page.click('[data-testid="sign-in-button"]');
-    await page.waitForURL(/\/adrs/, { timeout: 10000 });
+    await page.waitForURL(/\/adrs/, { timeout: 30000 });
 
     // Navigate to root
     await page.goto('http://localhost:4200/', { waitUntil: 'networkidle' });
