@@ -13,7 +13,8 @@ public class CouchbaseBootstrapper
         "tenants",
         "global_users",
         "verification_tokens",
-        "refresh_tokens"
+        "refresh_tokens",
+        "audit"
     ];
 
     public CouchbaseBootstrapper(CouchbaseContext context)

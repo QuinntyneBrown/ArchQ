@@ -32,7 +32,7 @@ public sealed class CouchbaseFixture : IAsyncDisposable
         var config = new CouchbaseConfiguration
         {
             ConnectionString = Environment.GetEnvironmentVariable("COUCHBASE_CONNECTION_STRING") ?? "couchbase://localhost",
-            Username = Environment.GetEnvironmentVariable("COUCHBASE_USERNAME") ?? "Administrator",
+            Username = Environment.GetEnvironmentVariable("COUCHBASE_USERNAME") ?? "Developer",
             Password = Environment.GetEnvironmentVariable("COUCHBASE_PASSWORD") ?? "password",
             BucketName = Environment.GetEnvironmentVariable("COUCHBASE_BUCKET") ?? "archq"
         };

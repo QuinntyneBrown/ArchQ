@@ -4,6 +4,7 @@
     <Project Path="src/ArchQ.Application/ArchQ.Application.csproj" />
     <Project Path="src/ArchQ.Core/ArchQ.Core.csproj" />
     <Project Path="src/ArchQ.Infrastructure/ArchQ.Infrastructure.csproj" />
+    <Project Path="src/ArchQ.Cli/ArchQ.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ArchQ.IntegrationTests/ArchQ.IntegrationTests.csproj" />

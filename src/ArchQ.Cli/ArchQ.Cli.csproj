@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ArchQ.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>archq</ToolCommandName>
+    <PackageId>ArchQ.Cli</PackageId>
+    <Version>1.0.0</Version>
+    <Description>CLI tool for initializing and seeding Couchbase for the ArchQ platform</Description>
+    <Authors>ArchQ</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ArchQ.Core\ArchQ.Core.csproj" />
+    <ProjectReference Include="..\ArchQ.Infrastructure\ArchQ.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <PackagePath>tools/net11.0/any/</PackagePath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
