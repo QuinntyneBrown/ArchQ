@@ -11,7 +11,8 @@ public class CouchbaseBootstrapper
     private static readonly string[] SystemCollections =
     [
         "tenants",
-        "global_users"
+        "global_users",
+        "verification_tokens"
     ];
 
     public CouchbaseBootstrapper(CouchbaseContext context)

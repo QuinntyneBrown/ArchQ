@@ -1,4 +1,5 @@
 using ArchQ.Core.Interfaces;
+using ArchQ.Infrastructure.Email;
 using ArchQ.Infrastructure.Identity;
 using ArchQ.Infrastructure.Persistence;
 using ArchQ.Infrastructure.Persistence.Configuration;
@@ -21,6 +22,12 @@ public static class DependencyInjection
         services.AddScoped<ICouchbaseProvisioner, CouchbaseProvisioner>();
         services.AddSingleton<CouchbaseBootstrapper>();
         services.AddScoped<ITenantContext, TenantContext>();
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IGlobalUserRepository, GlobalUserRepository>();
+        services.AddScoped<IVerificationTokenRepository, VerificationTokenRepository>();
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
 
         return services;
     }
