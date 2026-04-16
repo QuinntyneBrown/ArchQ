@@ -81,14 +81,14 @@ else
   echo ">>> Skipping Always On (not supported on F1)."
 fi
 
-echo ">>> Configuring default app settings (secrets still need Capella + JWT)..."
-JWT_KEY=$(openssl rand -base64 48)
+echo ">>> Configuring default app settings (secrets still need Capella)..."
+JWT_SECRET=$(openssl rand -base64 48)
 az webapp config appsettings set \
   --resource-group "$RG" \
   --name "$API_NAME" \
   --settings \
     ASPNETCORE_ENVIRONMENT=Production \
-    Jwt__Key="$JWT_KEY" \
+    Jwt__Secret="$JWT_SECRET" \
     Jwt__Issuer="https://${API_NAME}.azurewebsites.net" \
     Jwt__Audience="https://${API_NAME}.azurewebsites.net" \
     Couchbase__BucketName="archq" \
