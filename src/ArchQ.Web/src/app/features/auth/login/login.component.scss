@@ -40,16 +40,10 @@ h2.subtitle {
 .form-group {
   margin-bottom: 1rem;
 }
-.password-label-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.375rem;
-}
-.password-label-row label {
-  margin-bottom: 0;
-}
 .forgot-password {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
   font-size: 0.8125rem;
   color: #3b82f6;
   text-decoration: none;
