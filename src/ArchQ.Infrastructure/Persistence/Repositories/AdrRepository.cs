@@ -245,9 +245,18 @@ public class AdrRepository : IAdrRepository
 
         await foreach (var row in result.Rows)
         {
-            if (row.maxNum is not null)
+            try
             {
-                return (int)(long)row.maxNum;
+                if (row.maxNum is not null)
+                {
+                    return (int)(long)row.maxNum;
+                }
+            }
+            catch (System.ArgumentException)
+            {
+                // MAX() returns JSON null when no ADRs exist;
+                // Newtonsoft JToken.op_Explicit throws on null-to-Int64 cast.
+                return 0;
             }
         }
 
