@@ -1,5 +1,4 @@
-using System.Security.Cryptography;
-using System.Text;
+using ArchQ.Application.Common;
 using ArchQ.Core.Exceptions;
 using ArchQ.Core.Interfaces;
 using MediatR;
@@ -21,7 +20,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Ver
 
     public async Task<VerifyEmailResponse> Handle(VerifyEmailCommand request, CancellationToken cancellationToken)
     {
-        var tokenHash = ComputeSha256(request.Token);
+        var tokenHash = TokenHasher.ComputeSha256(request.Token);
 
         var verificationToken = await _verificationTokenRepository.GetByTokenHashAsync(tokenHash);
 
@@ -49,13 +48,8 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, Ver
 
         return new VerifyEmailResponse
         {
-            Message = "Email verified successfully. You can now sign in."
+            Message = "Email verified successfully. You may now sign in."
         };
     }
 
-    private static string ComputeSha256(string input)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
-        return Convert.ToHexStringLower(bytes);
-    }
 }

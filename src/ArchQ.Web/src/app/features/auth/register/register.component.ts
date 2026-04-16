@@ -22,7 +22,7 @@ import { AuthService } from '../../../core/services/auth.service';
           </svg>
           <span class="logo-text">ArchQ</span>
         </div>
-        <p class="subtitle">Create your account</p>
+        <h2 class="subtitle">Create your account</h2>
 
         @if (errorMessage()) {
           <div class="error-banner" data-testid="error-message">{{ errorMessage() }}</div>
@@ -127,7 +127,7 @@ import { AuthService } from '../../../core/services/auth.service';
     }
     .register-card {
       width: 100%;
-      max-width: 28rem;
+      max-width: 27.5rem;
       padding: 2rem 2.5rem;
       background-color: #1a1d2e;
       border: 1px solid #2a2d3e;
@@ -150,11 +150,12 @@ import { AuthService } from '../../../core/services/auth.service';
       font-weight: 700;
       color: #ffffff;
     }
-    .subtitle {
+    h2.subtitle {
       text-align: center;
       color: #9ca3af;
       font-size: 0.875rem;
-      margin-bottom: 1.5rem;
+      font-weight: 400;
+      margin: 0 0 1.5rem;
     }
     .form-group {
       margin-bottom: 1rem;
@@ -251,7 +252,7 @@ import { AuthService } from '../../../core/services/auth.service';
     .sign-in-prompt a:hover {
       text-decoration: underline;
     }
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
       .register-card {
         padding: 1.5rem;
         border-radius: 0.5rem;
@@ -278,19 +279,21 @@ export class RegisterComponent {
   constructor(private readonly authService: AuthService) {}
 
   onPasswordChange(): void {
-    let strength = 0;
-    if (this.password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(this.password)) strength += 25;
-    if (/[a-z]/.test(this.password)) strength += 25;
-    if (/[^a-zA-Z0-9]/.test(this.password)) strength += 25;
+    let score = 0;
+    if (this.password.length >= 8) score++;
+    if (/[A-Z]/.test(this.password)) score++;
+    if (/[a-z]/.test(this.password)) score++;
+    if (/[0-9]/.test(this.password)) score++;
+    if (/[^a-zA-Z0-9]/.test(this.password)) score++;
 
+    const strength = (score / 5) * 100;
     this.passwordStrength.set(strength);
 
-    if (strength <= 25) {
+    if (score <= 1) {
       this.passwordStrengthColor.set('#ef4444');
-    } else if (strength <= 50) {
+    } else if (score <= 2) {
       this.passwordStrengthColor.set('#f97316');
-    } else if (strength <= 75) {
+    } else if (score <= 3) {
       this.passwordStrengthColor.set('#eab308');
     } else {
       this.passwordStrengthColor.set('#22c55e');

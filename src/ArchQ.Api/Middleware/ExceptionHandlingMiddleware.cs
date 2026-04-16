@@ -50,7 +50,22 @@ public class ExceptionHandlingMiddleware
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/json";
 
-        var response = JsonSerializer.Serialize(new { error, message }, new JsonSerializerOptions
+        object body;
+
+        if (exception is ValidationException validationException)
+        {
+            var details = validationException.Errors
+                .Select(e => new { field = e.PropertyName, message = e.ErrorMessage })
+                .ToArray();
+
+            body = new { error, message, details };
+        }
+        else
+        {
+            body = new { error, message };
+        }
+
+        var response = JsonSerializer.Serialize(body, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });

@@ -19,6 +19,7 @@ public class AuthController : ControllerBase
         _env = env;
     }
 
+    // TODO: Add rate limiting to register endpoint. Deferred to Feature 20 (Security & Validation).
     [HttpPost("register")]
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> Register([FromBody] RegisterCommand command)

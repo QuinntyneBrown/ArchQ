@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
+using ArchQ.Application.Common;
 using ArchQ.Application.Tenants.Commands.CreateTenant;
 using ArchQ.Core.Entities;
 using ArchQ.Core.Interfaces;
@@ -46,6 +46,9 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
 
     public async Task<RegisterResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
+        // TODO: Invite token support is deferred. When provided, inviteToken is currently ignored.
+        // Future: validate invite token, associate user with existing tenant, and bypass org creation.
+
         var emailLower = request.Email.Trim().ToLowerInvariant();
 
         // Check if email already exists — return generic success to prevent enumeration
@@ -114,7 +117,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
 
         // Generate verification token
         var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-        var tokenHash = ComputeSha256(rawToken);
+        var tokenHash = TokenHasher.ComputeSha256(rawToken);
 
         var verificationToken = new VerificationToken
         {
@@ -167,9 +170,4 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterR
         return slug;
     }
 
-    private static string ComputeSha256(string input)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
-        return Convert.ToHexStringLower(bytes);
-    }
 }
