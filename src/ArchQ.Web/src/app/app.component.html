@@ -1,2 +1,13 @@
 <app-toast></app-toast>
+@if (authService.isLoggedIn()) {
+  <div class="app-toolbar">
+    <button
+      class="logout-button"
+      data-testid="logout-button"
+      (click)="onLogout()"
+    >
+      Logout
+    </button>
+  </div>
+}
 <router-outlet />

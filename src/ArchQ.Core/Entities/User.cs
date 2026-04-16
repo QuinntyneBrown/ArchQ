@@ -16,5 +16,6 @@ public class User
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
     public int FailedLoginAttempts { get; set; }
+    public DateTime? FirstFailedAttemptAt { get; set; }
     public DateTime? LockedUntil { get; set; }
 }

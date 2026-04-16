@@ -1,3 +1,6 @@
+using ArchQ.Application.Auth.Commands.Login;
+using ArchQ.Application.Auth.Commands.Logout;
+using ArchQ.Application.Auth.Commands.RefreshToken;
 using ArchQ.Application.Auth.Commands.Register;
 using ArchQ.Application.Auth.Commands.VerifyEmail;
 using ArchQ.Infrastructure.Email;
@@ -12,6 +15,9 @@ public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IWebHostEnvironment _env;
+
+    private const string AccessCookieName = "archq_access";
+    private const string RefreshCookieName = "archq_refresh";
 
     public AuthController(IMediator mediator, IWebHostEnvironment env)
     {
@@ -36,6 +42,54 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Login([FromBody] LoginCommand command)
+    {
+        var response = await _mediator.Send(command);
+
+        SetAuthCookies(response.AccessToken, response.RefreshToken);
+
+        return Ok(new
+        {
+            user = response.User,
+            tenant = response.Tenant,
+            memberships = response.Memberships
+        });
+    }
+
+    [HttpPost("refresh")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Refresh()
+    {
+        var refreshToken = Request.Cookies[RefreshCookieName];
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            return Unauthorized(new { code = "MISSING_REFRESH_TOKEN", message = "No refresh token provided." });
+        }
+
+        var response = await _mediator.Send(new RefreshTokenCommand { RefreshToken = refreshToken });
+
+        SetAuthCookies(response.AccessToken, response.RefreshToken);
+
+        return Ok(new { message = "Tokens refreshed." });
+    }
+
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Logout()
+    {
+        var refreshToken = Request.Cookies[RefreshCookieName];
+        if (!string.IsNullOrEmpty(refreshToken))
+        {
+            await _mediator.Send(new LogoutCommand { RefreshToken = refreshToken });
+        }
+
+        ClearAuthCookies();
+
+        return Ok(new { message = "Logged out successfully." });
+    }
+
     [HttpGet("test/verification-token")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -53,5 +107,49 @@ public class AuthController : ControllerBase
         }
 
         return NotFound(new { message = "No verification token found for this email." });
+    }
+
+    private void SetAuthCookies(string accessToken, string refreshToken)
+    {
+        var isSecure = !_env.IsDevelopment();
+
+        Response.Cookies.Append(AccessCookieName, accessToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isSecure,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api",
+            MaxAge = TimeSpan.FromMinutes(15)
+        });
+
+        Response.Cookies.Append(RefreshCookieName, refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isSecure,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/auth",
+            MaxAge = TimeSpan.FromDays(7)
+        });
+    }
+
+    private void ClearAuthCookies()
+    {
+        var isSecure = !_env.IsDevelopment();
+
+        Response.Cookies.Delete(AccessCookieName, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isSecure,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api"
+        });
+
+        Response.Cookies.Delete(RefreshCookieName, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isSecure,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/auth"
+        });
     }
 }
