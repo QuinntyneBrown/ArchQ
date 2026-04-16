@@ -1,0 +1,112 @@
+@startuml class_diagram
+title Class Diagram — Organization Switching
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Frontend Components" {
+    class OrgSwitcherComponent {
+        -memberships: OrgMembership[]
+        -activeTenantSlug: string
+        -isOpen: boolean
+        +render(): void
+        +onOrgSelected(slug: string): void
+        +toggleDropdown(): void
+        -fetchMemberships(): Promise<void>
+        -performSwitch(slug: string): Promise<void>
+    }
+
+    class AuthStore {
+        +currentUser: UserProfile
+        +activeTenant: TenantInfo
+        +memberships: OrgMembership[]
+        +accessToken: string
+        +setActiveTenant(tenant: TenantInfo): void
+        +updateMemberships(list: OrgMembership[]): void
+        +clearSession(): void
+    }
+}
+
+package "Controllers" {
+    class OrgController {
+        -orgSwitchService: OrgSwitchService
+        +listMemberships(req, res): Promise<void>
+        +switchOrg(req, res): Promise<void>
+    }
+}
+
+package "Services" {
+    class OrgSwitchService {
+        -globalUserRepo: GlobalUserRepository
+        -userRepo: UserRepository
+        -tokenService: TokenService
+        -refreshTokenRepo: RefreshTokenRepository
+        -auditService: AuditService
+        +listMemberships(userId: string): Promise<OrgMembership[]>
+        +switchOrg(userId: string, targetSlug: string): Promise<SwitchResult>
+        -validateMembership(email: string, slug: string): Promise<TenantMembership>
+        -getUserRolesInTenant(userId: string, slug: string): Promise<Role[]>
+    }
+
+    class TokenService {
+        +createAccessToken(payload: AccessTokenPayload): string
+        +createRefreshToken(payload: RefreshTokenPayload): string
+    }
+
+    class AuditService {
+        +record(entry: AuditEntry): Promise<void>
+    }
+}
+
+package "Repositories" {
+    class GlobalUserRepository {
+        +findByEmail(email: string): Promise<GlobalUser | null>
+    }
+
+    class UserRepository {
+        +findById(id: string): Promise<User | null>
+    }
+
+    class RefreshTokenRepository {
+        +revokeFamily(family: string): Promise<void>
+        +store(token: RefreshTokenDoc): Promise<void>
+    }
+}
+
+package "DTOs / Models" {
+    class OrgMembership {
+        +tenantId: string
+        +tenantSlug: string
+        +displayName: string
+        +roles: Role[]
+        +isActive: boolean
+    }
+
+    class SwitchResult {
+        +accessToken: string
+        +refreshToken: string
+        +tenant: TenantInfo
+        +user: UserProfile
+    }
+
+    class TenantInfo {
+        +id: string
+        +slug: string
+        +displayName: string
+    }
+
+    class SwitchOrgDto {
+        +tenantSlug: string
+    }
+}
+
+OrgSwitcherComponent --> AuthStore : reads/updates
+OrgSwitcherComponent --> OrgController : HTTP calls
+OrgController --> OrgSwitchService
+OrgSwitchService --> GlobalUserRepository
+OrgSwitchService --> UserRepository
+OrgSwitchService --> TokenService
+OrgSwitchService --> RefreshTokenRepository
+OrgSwitchService --> AuditService
+
+@enduml

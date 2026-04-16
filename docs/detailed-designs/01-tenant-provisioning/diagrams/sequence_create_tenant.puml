@@ -1,0 +1,72 @@
+@startuml sequence_create_tenant
+title Sequence Diagram — Create Tenant
+
+actor "Admin / Registration Flow" as Client
+participant "TenantController" as Ctrl
+participant "TenantService" as Svc
+participant "SlugGenerator" as Slug
+participant "TenantRepository" as Repo
+participant "CouchbaseProvisioner" as Prov
+participant "AuditService" as Audit
+database "Couchbase\n_system.tenants" as DB
+database "Couchbase\n{new-scope}" as Scope
+
+Client -> Ctrl : POST /api/tenants\n{ displayName, slug }
+activate Ctrl
+
+Ctrl -> Ctrl : Validate request body
+Ctrl -> Svc : createTenant(dto)
+activate Svc
+
+Svc -> Slug : validate(slug)
+activate Slug
+Slug --> Svc : ValidationResult { valid: true }
+deactivate Slug
+
+Svc -> Repo : slugExists(slug)
+activate Repo
+Repo -> DB : SELECT COUNT(*) FROM _system.tenants\nWHERE slug = $slug
+DB --> Repo : count = 0
+Repo --> Svc : false
+deactivate Repo
+
+alt Slug already exists
+    Svc --> Ctrl : throw SlugConflictError
+    Ctrl --> Client : 409 Conflict\n{ error: "SLUG_CONFLICT" }
+end
+
+Svc -> Svc : Generate UUID v4 for tenant ID
+
+Svc -> Prov : provisionScope("acme-corp")
+activate Prov
+Prov -> Scope : CREATE SCOPE archq.`acme-corp`
+Scope --> Prov : OK
+
+Prov -> Scope : CREATE COLLECTION for each of:\nusers, adrs, adr_versions,\nmeeting_notes, notes, comments,\nattachments_meta, audit, tags, config
+Scope --> Prov : OK (10 collections)
+
+Prov -> Scope : CREATE INDEX idx_adrs_status\nON archq.`acme-corp`.adrs(status)
+Prov -> Scope : CREATE INDEX idx_users_email\nON archq.`acme-corp`.users(email)
+Scope --> Prov : OK
+Prov --> Svc : Provisioning complete
+deactivate Prov
+
+Svc -> Repo : create(tenantDoc)
+activate Repo
+Repo -> DB : UPSERT tenant::uuid INTO\n_system.tenants
+DB --> Repo : MutationResult
+Repo --> Svc : OK
+deactivate Repo
+
+Svc -> Audit : record({ action: "TENANT_CREATED",\nresourceId: tenantId })
+activate Audit
+Audit --> Svc : OK
+deactivate Audit
+
+Svc --> Ctrl : Tenant object
+deactivate Svc
+
+Ctrl --> Client : 201 Created\n{ id, displayName, slug, status }
+deactivate Ctrl
+
+@enduml

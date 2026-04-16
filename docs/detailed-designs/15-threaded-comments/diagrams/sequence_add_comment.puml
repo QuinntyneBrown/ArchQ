@@ -1,0 +1,36 @@
+@startuml sequence_add_comment
+title Sequence Diagram — Add Comment to ADR
+
+actor "Author/Reviewer/Admin" as User
+participant "CommentController" as Ctrl
+participant "AuthorizationGuard" as Auth
+participant "CommentService" as Svc
+participant "MarkdownSanitizer" as Sanitizer
+participant "CommentRepository" as Repo
+participant "AuditService" as Audit
+database "Couchbase\n(comments)" as CB
+
+User -> Ctrl : POST /api/adrs/:adrId/comments\n{ body, parentCommentId: null }
+Ctrl -> Auth : requireRole(Author, Reviewer, Admin)
+
+alt Viewer role
+    Auth --> Ctrl : 403 Forbidden
+    Ctrl --> User : 403 { error: "FORBIDDEN" }
+else Authorized role
+    Auth --> Ctrl : OK
+    Ctrl -> Svc : addComment(adrId, body, null, authorId)
+    Svc -> Svc : Validate ADR exists
+    Svc -> Sanitizer : sanitize(body)
+    Sanitizer --> Svc : sanitizedBody
+    Svc -> Svc : Generate comment UUID
+    Svc -> Repo : insert(commentDoc)
+    Repo -> CB : collection.insert("comment::uuid", doc)
+    CB --> Repo : MutationResult
+    Repo --> Svc : Comment
+    Svc -> Audit : record("comment_added", adrId, details)
+    Audit -> CB : collection.insert("audit::timestamp::uuid", entry)
+    Svc --> Ctrl : Comment
+    Ctrl --> User : 201 Created { id, body, authorId, createdAt }
+end
+
+@enduml

@@ -1,0 +1,28 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — Version History & Diff
+
+Person(user, "Author / Reviewer / Admin", "Views version history and compares ADR versions")
+
+System_Boundary(api, "ArchQ API Service") {
+    Component(ctrl, "VersionController", "Express Router", "Handles version listing, viewing, and comparison endpoints")
+    Component(svc, "VersionService", "Service", "Orchestrates version creation, retrieval, and diff computation")
+    Component(diffEngine, "DiffEngine", "Utility", "Computes line-level diffs between two Markdown bodies")
+    Component(repo, "VersionRepository", "TenantScopedRepository", "Persists and queries version snapshots in adr_versions collection")
+    Component(adrSvc, "AdrService", "Service", "Triggers version creation on ADR content update")
+    Component(auditSvc, "AuditService", "Service", "Records audit entries for content changes")
+}
+
+ContainerDb(cb, "Couchbase", "adr_versions collection", "Stores full version snapshots per tenant scope")
+
+Rel(user, ctrl, "GET version list / view / compare", "HTTPS / JSON")
+Rel(ctrl, svc, "Delegates business logic")
+Rel(adrSvc, svc, "Triggers version creation on edit")
+Rel(svc, repo, "Reads/writes version snapshots")
+Rel(svc, diffEngine, "Computes diff between versions")
+Rel(svc, auditSvc, "Records audit entries")
+Rel(repo, cb, "N1QL queries / KV ops", "Couchbase SDK")
+
+SHOW_LEGEND()
+@enduml

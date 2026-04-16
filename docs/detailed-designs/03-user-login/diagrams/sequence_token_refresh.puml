@@ -1,0 +1,76 @@
+@startuml sequence_token_refresh
+title Sequence Diagram — Token Refresh with Rotation
+
+actor "Client (SPA)" as Client
+participant "AuthController" as Ctrl
+participant "TokenService" as Token
+participant "RefreshTokenRepository" as RRepo
+participant "UserRepository" as URepo
+participant "AuditService" as Audit
+database "Couchbase\n_system.refresh_tokens" as DB
+
+Client -> Ctrl : POST /api/auth/refresh\nCookie: archq_refresh=<jwt>
+activate Ctrl
+
+Ctrl -> Token : verifyRefreshToken(jwt)
+activate Token
+Token --> Ctrl : RefreshTokenPayload\n{ sub, family, jti }
+deactivate Token
+
+alt JWT signature invalid or expired
+    Ctrl --> Client : 401 { error: "INVALID_REFRESH_TOKEN" }
+end
+
+Ctrl -> RRepo : findByHash(sha256(jti))
+activate RRepo
+RRepo -> DB : GET rtoken::{hash}
+DB --> RRepo : RefreshTokenDoc
+RRepo --> Ctrl : tokenDoc
+deactivate RRepo
+
+alt Token already revoked (potential theft)
+    Ctrl -> RRepo : revokeFamily(tokenDoc.family)
+    activate RRepo
+    RRepo -> DB : UPDATE all tokens in family\nSET revoked=true
+    RRepo --> Ctrl : OK
+    deactivate RRepo
+    Ctrl -> Audit : record({ action: "REFRESH_FAMILY_REVOKED",\ndetails: "Replay detected" })
+    Ctrl --> Client : 401 { error: "SESSION_COMPROMISED",\nmessage: "Please sign in again." }
+end
+
+Ctrl -> URepo : findById(tokenDoc.userId)
+activate URepo
+note right: Fetch current roles\n(may have changed)
+URepo --> Ctrl : user (with current roles)
+deactivate URepo
+
+Ctrl -> Token : createAccessToken({ sub, email,\ntenant_id, tenant_slug, roles })
+activate Token
+Token --> Ctrl : newAccessToken
+deactivate Token
+
+Ctrl -> Token : createRefreshToken({ sub,\nfamily: same, jti: newJti })
+activate Token
+Token --> Ctrl : newRefreshToken
+deactivate Token
+
+Ctrl -> RRepo : revoke(oldTokenHash,\nreplacedBy: newTokenHash)
+activate RRepo
+RRepo -> DB : UPDATE rtoken::{oldHash}\nSET revoked=true,\nreplacedBy=newHash
+RRepo --> Ctrl : OK
+deactivate RRepo
+
+Ctrl -> RRepo : store(newRefreshTokenDoc)
+activate RRepo
+RRepo -> DB : UPSERT rtoken::{newHash}
+RRepo --> Ctrl : OK
+deactivate RRepo
+
+Ctrl -> Audit : record({ action: "TOKEN_REFRESHED" })
+
+Ctrl -> Ctrl : setCookies(res,\nnewAccessToken, newRefreshToken)
+
+Ctrl --> Client : 200 OK\nSet-Cookie: archq_access=<new>\nSet-Cookie: archq_refresh=<new>\n{ message: "Token refreshed." }
+deactivate Ctrl
+
+@enduml

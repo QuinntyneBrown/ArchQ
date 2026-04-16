@@ -1,0 +1,30 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — ADR Tagging
+
+Person(user, "Author / Admin", "Assigns and manages tags on ADRs")
+
+System_Boundary(api, "ArchQ API Service") {
+    Component(ctrl, "TagController", "Express Router", "Handles tag assignment, removal, and autocomplete endpoints")
+    Component(authGuard, "AuthorizationGuard", "Middleware", "Validates caller has Author or Admin role")
+    Component(svc, "TagService", "Service", "Orchestrates tag creation, assignment, and usage count management")
+    Component(tagRepo, "TagRepository", "TenantScopedRepository", "Persists tag definitions in tenant-scoped tags collection")
+    Component(adrRepo, "AdrRepository", "TenantScopedRepository", "Updates tags array on ADR documents")
+    Component(auditSvc, "AuditService", "Service", "Records immutable audit entries")
+}
+
+ContainerDb(cbTags, "Couchbase", "tags collection", "Stores tag definitions per tenant scope")
+ContainerDb(cbAdrs, "Couchbase", "adrs collection", "Stores ADR documents with tags array")
+
+Rel(user, ctrl, "POST/GET/DELETE tags", "HTTPS / JSON")
+Rel(ctrl, authGuard, "Checks role")
+Rel(ctrl, svc, "Delegates business logic")
+Rel(svc, tagRepo, "Reads/writes tag definitions")
+Rel(svc, adrRepo, "Updates ADR tags array")
+Rel(svc, auditSvc, "Records audit entries")
+Rel(tagRepo, cbTags, "N1QL queries / KV ops", "Couchbase SDK")
+Rel(adrRepo, cbAdrs, "KV ops", "Couchbase SDK")
+
+SHOW_LEGEND()
+@enduml

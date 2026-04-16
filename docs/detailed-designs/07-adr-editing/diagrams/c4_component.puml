@@ -1,0 +1,51 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram — ADR Editing (Feature 07)
+
+Person(author, "Author", "Edits own ADRs in Draft or In Review status")
+Person(admin, "Admin", "Edits any ADR in Draft or In Review status")
+
+Container_Boundary(spa, "Frontend SPA") {
+    Component(adrEditorPage, "AdrEditorPage", "React Component", "Loads existing ADR for editing; split-pane Markdown editor with toolbar and action bar")
+    Component(markdownEditor, "MarkdownEditor", "React Component", "CodeMirror-based edit pane (Geist Mono)")
+    Component(markdownPreview, "MarkdownPreview", "React Component", "Live-rendered sanitised HTML preview")
+    Component(readOnlyView, "AdrReadOnlyView", "React Component", "Displays ADR content in read-only mode for terminal statuses")
+    Component(adrClientService, "AdrClientService", "TypeScript Service", "HTTP client for ADR read/update operations")
+}
+
+Container_Boundary(api, "API Server") {
+    Component(adrController, "AdrController", "NestJS Controller", "GET /adrs/:adrId — load ADR\nPUT /adrs/:adrId — update ADR")
+    Component(adrService, "AdrService", "NestJS Service", "Enforces edit permissions, status checks, version creation, approver notification")
+    Component(versionService, "AdrVersionService", "NestJS Service", "Archives current body to adr_versions before update")
+    Component(notificationService, "NotificationService", "NestJS Service", "Sends in-app/email notifications to assigned approvers on In Review edits")
+    Component(adrRepository, "AdrRepository", "Repository", "Couchbase CRUD for adrs collection")
+    Component(versionRepository, "AdrVersionRepository", "Repository", "Couchbase CRUD for adr_versions collection")
+    Component(auditService, "AuditService", "Service", "Records adr.updated event")
+    Component(tenantContext, "TenantContext", "Middleware", "Extracts tenant slug from JWT")
+}
+
+ContainerDb(couchbase, "Couchbase", "archq bucket", "Scopes per tenant; collections: adrs, adr_versions, audit")
+
+author --> adrEditorPage
+admin --> adrEditorPage
+adrEditorPage --> markdownEditor
+adrEditorPage --> markdownPreview
+adrEditorPage --> readOnlyView
+adrEditorPage --> adrClientService
+
+adrClientService --> adrController : "GET/PUT /api/tenants/:slug/adrs/:adrId"
+adrController --> tenantContext
+adrController --> adrService
+
+adrService --> versionService
+adrService --> adrRepository
+adrService --> notificationService
+adrService --> auditService
+
+versionService --> versionRepository
+versionRepository --> couchbase
+adrRepository --> couchbase
+auditService --> couchbase
+
+@enduml

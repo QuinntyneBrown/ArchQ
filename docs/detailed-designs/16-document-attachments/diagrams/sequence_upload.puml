@@ -1,0 +1,60 @@
+@startuml sequence_upload
+title Sequence Diagram — Upload Attachment
+
+actor "Author / Admin" as User
+participant "AttachmentController" as Ctrl
+participant "AttachmentService" as Svc
+participant "AdrRepository" as AdrRepo
+participant "FileValidator" as Validator
+participant "ObjectStorageClient" as S3
+participant "AttachmentRepository" as Repo
+participant "AuditService" as Audit
+database "Couchbase\n(attachments_meta)" as CB
+database "Object Storage\n(S3)" as S3Store
+
+User -> Ctrl : POST /api/adrs/:adrId/attachments\nmultipart: file, displayName, description
+Ctrl -> Svc : upload(adrId, file, displayName, description, userId)
+
+Svc -> AdrRepo : findById(adrId)
+AdrRepo -> CB : collection.get("adr::adrId")
+CB --> AdrRepo : ADR document
+AdrRepo --> Svc : adr
+
+alt ADR status not Draft or In Review
+    Svc --> Ctrl : 409 INVALID_ADR_STATUS
+    Ctrl --> User : 409 { error: "INVALID_ADR_STATUS" }
+else ADR in Draft or In Review
+    Svc -> Validator : validate(file)
+
+    alt Invalid file type
+        Validator --> Svc : { valid: false, errorCode: "INVALID_FILE_TYPE" }
+        Svc --> Ctrl : 400 INVALID_FILE_TYPE
+        Ctrl --> User : 400 { error: "INVALID_FILE_TYPE" }
+    else File too large
+        Validator --> Svc : { valid: false, errorCode: "FILE_TOO_LARGE" }
+        Svc --> Ctrl : 400 FILE_TOO_LARGE
+        Ctrl --> User : 400 { error: "FILE_TOO_LARGE" }
+    else Valid file
+        Validator --> Svc : { valid: true, sanitizedFileName, detectedMimeType }
+
+        Svc -> Svc : Generate UUID, storage key\n{tenantSlug}/{adrId}/{attachId}/{fileName}
+
+        Svc -> S3 : putObject(storageKey, fileStream, mimeType)
+        S3 -> S3Store : PUT object
+        S3Store --> S3 : OK
+        S3 --> Svc : OK
+
+        Svc -> Repo : insert(attachmentMetaDoc)
+        Repo -> CB : collection.insert("attach::uuid", doc)
+        CB --> Repo : MutationResult
+        Repo --> Svc : AttachmentMeta
+
+        Svc -> Audit : record("artifact_added", adrId, details)
+        Audit -> CB : insert audit entry
+
+        Svc --> Ctrl : AttachmentMeta
+        Ctrl --> User : 201 Created { id, displayName, fileName, ... }
+    end
+end
+
+@enduml

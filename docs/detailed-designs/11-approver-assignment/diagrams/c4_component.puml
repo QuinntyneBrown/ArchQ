@@ -1,0 +1,25 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram — Approver Assignment (Feature 11)
+
+Container_Boundary(api, "ArchQ API") {
+    Component(ctrl, "WorkflowController", "REST Controller", "POST /api/adrs/{id}/transitions")
+    Component(wfSvc, "WorkflowService", "Service", "Orchestrates transition including approver assignment")
+    Component(validator, "ApproverAssignmentValidator", "Validator", "Validates approver list: roles, self-assignment, duplicates")
+    Component(userRepo, "UserRepository", "Repository", "Loads user documents for role verification")
+    Component(adrRepo, "AdrRepository", "Repository", "Reads/writes ADR documents with embedded approvers")
+    Component(tenantCtx, "TenantContext", "Middleware", "Extracts tenant slug from JWT")
+}
+
+ContainerDb(cb, "Couchbase", "archq bucket", "Scopes: {tenant_slug}. Collections: adrs, users")
+
+Rel(ctrl, wfSvc, "Delegates transition + approver assignment")
+Rel(wfSvc, validator, "Validates approver list")
+Rel(validator, userRepo, "Loads users to verify roles")
+Rel(wfSvc, adrRepo, "Persists ADR with approvers")
+Rel(userRepo, cb, "N1QL query users collection")
+Rel(adrRepo, cb, "KV ops on adrs collection")
+Rel(ctrl, tenantCtx, "Reads tenant scope")
+
+@enduml

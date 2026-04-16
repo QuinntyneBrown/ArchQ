@@ -1,0 +1,175 @@
+@startuml class_diagram
+title Class Diagram — Role Management
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Controllers" {
+    class RoleController {
+        -roleService: RoleService
+        +getUserRoles(req, res): Promise<void>
+        +setRoles(req, res): Promise<void>
+        +addRole(req, res): Promise<void>
+        +removeRole(req, res): Promise<void>
+        +listRoleDefinitions(req, res): Promise<void>
+    }
+}
+
+package "Middleware" {
+    class AuthorizationGuard {
+        +{static} requireRole(...roles: Role[]): Middleware
+        +{static} requirePermission(...perms: Permission[]): Middleware
+        +{static} requireAny(...perms: Permission[]): Middleware
+        -checkLiveRoles(userId: string, slug: string): Promise<Role[]>
+    }
+
+    class TenantContextMiddleware {
+        +handle(req, res, next): void
+    }
+
+    class TenantContext {
+        +tenantId: string
+        +tenantSlug: string
+        +userId: string
+        +roles: Role[]
+    }
+}
+
+package "Services" {
+    class RoleService {
+        -userRepository: UserRepository
+        -rolePolicy: RolePolicy
+        -auditService: AuditService
+        +getUserRoles(userId: string): Promise<Role[]>
+        +setRoles(userId: string, roles: Role[], actorId: string): Promise<UserRoleResult>
+        +addRole(userId: string, role: Role, actorId: string): Promise<UserRoleResult>
+        +removeRole(userId: string, role: Role, actorId: string): Promise<UserRoleResult>
+        +listRoleDefinitions(): Promise<RoleDefinition[]>
+        -validateRoleChange(userId: string, newRoles: Role[], actorId: string): Promise<void>
+        -ensureNotLastAdmin(userId: string, newRoles: Role[]): Promise<void>
+    }
+
+    class AuditService {
+        +record(entry: AuditEntry): Promise<void>
+    }
+}
+
+package "Policy" {
+    class RolePolicy {
+        -{static} PERMISSION_MAP: Map<Role, Permission[]>
+        +{static} canPerform(roles: Role[], action: Permission): boolean
+        +{static} canApproveAdr(userId: string, authorId: string, roles: Role[]): boolean
+        +{static} getEffectivePermissions(roles: Role[]): Permission[]
+        +{static} isValidRole(role: string): boolean
+    }
+
+    class RoleDefinition {
+        +role: Role
+        +displayName: string
+        +description: string
+        +permissions: Permission[]
+    }
+}
+
+package "Repositories" {
+    class UserRepository {
+        +findById(id: string): Promise<User | null>
+        +update(user: User): Promise<void>
+        +countByRole(role: Role): Promise<number>
+    }
+}
+
+package "Models" {
+    enum Role {
+        ADMIN
+        AUTHOR
+        REVIEWER
+        VIEWER
+    }
+
+    enum Permission {
+        TENANT_MANAGE
+        USER_MANAGE
+        ROLE_ASSIGN
+        ADR_CREATE
+        ADR_EDIT_OWN
+        ADR_EDIT_ANY
+        ADR_DELETE
+        ADR_SUBMIT_REVIEW
+        ADR_APPROVE
+        ADR_REJECT
+        ADR_VIEW
+        COMMENT_CREATE
+        COMMENT_EDIT_OWN
+        COMMENT_DELETE_OWN
+        COMMENT_DELETE_ANY
+        NOTE_CREATE
+        NOTE_VIEW
+        ATTACHMENT_UPLOAD
+        ATTACHMENT_VIEW
+        AUDIT_VIEW
+        CONFIG_MANAGE
+    }
+
+    class UserRoleResult {
+        +userId: string
+        +roles: Role[]
+        +permissions: Permission[]
+        +updatedAt: Date
+    }
+
+    class AuditEntry {
+        +id: string
+        +timestamp: Date
+        +action: string
+        +actorId: string
+        +targetUserId: string
+        +resourceType: string
+        +details: RoleChangeDetails
+    }
+
+    class RoleChangeDetails {
+        +role: Role
+        +previousRoles: Role[]
+        +newRoles: Role[]
+    }
+
+    AuditEntry --> RoleChangeDetails
+}
+
+package "Errors" {
+    class ForbiddenError {
+        +message: string
+        +statusCode: number = 403
+    }
+
+    class LastAdminError {
+        +message: string
+        +statusCode: number = 409
+    }
+
+    class SelfApprovalError {
+        +message: string
+        +statusCode: number = 403
+    }
+
+    class InvalidRoleError {
+        +message: string
+        +statusCode: number = 400
+    }
+}
+
+RoleController --> RoleService
+RoleController --> AuthorizationGuard
+AuthorizationGuard --> RolePolicy
+AuthorizationGuard --> UserRepository
+RoleService --> UserRepository
+RoleService --> RolePolicy
+RoleService --> AuditService
+TenantContextMiddleware --> TenantContext
+AuthorizationGuard --> TenantContext
+RolePolicy --> Role
+RolePolicy --> Permission
+RolePolicy --> RoleDefinition
+
+@enduml

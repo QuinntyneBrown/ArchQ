@@ -1,0 +1,43 @@
+services:
+  couchbase:
+    image: couchbase:enterprise-7.6.1
+    ports:
+      - "8091-8097:8091-8097"
+      - "11210-11211:11210-11211"
+    volumes:
+      - couchbase-data:/opt/couchbase/var
+    environment:
+      - COUCHBASE_ADMINISTRATOR_USERNAME=Administrator
+      - COUCHBASE_ADMINISTRATOR_PASSWORD=password123
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8091/pools"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Couchbase__ConnectionString=couchbase://couchbase
+      - Couchbase__Username=Administrator
+      - Couchbase__Password=password123
+    depends_on:
+      couchbase:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+
+volumes:
+  couchbase-data:

@@ -1,0 +1,31 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram — Approval Decisions (Feature 12)
+
+Container_Boundary(api, "ArchQ API") {
+    Component(ctrl, "ApprovalController", "REST Controller", "POST /api/adrs/{id}/decisions")
+    Component(appSvc, "ApprovalService", "Service", "Records decisions, evaluates threshold, triggers transitions")
+    Component(wfSvc, "WorkflowService", "Service", "Executes auto-transitions (Approved/Rejected)")
+    Component(configRepo, "ConfigRepository", "Repository", "Reads approval threshold from config collection")
+    Component(adrRepo, "AdrRepository", "Repository", "Reads/writes ADR documents with approver entries")
+    Component(auditRepo, "AuditRepository", "Repository", "Records decision and transition audit entries")
+    Component(notifSvc, "NotificationService", "Service", "Notifies author on status transitions")
+    Component(tenantCtx, "TenantContext", "Middleware", "Extracts tenant slug from JWT")
+}
+
+ContainerDb(cb, "Couchbase", "archq bucket", "Scopes: {tenant_slug}. Collections: adrs, config, audit")
+
+Rel(ctrl, appSvc, "Records decision")
+Rel(appSvc, adrRepo, "Loads / updates ADR with decision")
+Rel(appSvc, configRepo, "Reads approval threshold")
+Rel(appSvc, wfSvc, "Triggers auto-transition when threshold met or rejected")
+Rel(wfSvc, adrRepo, "Updates ADR status")
+Rel(wfSvc, auditRepo, "Writes audit entry")
+Rel(wfSvc, notifSvc, "Notifies author")
+Rel(adrRepo, cb, "KV ops on adrs collection")
+Rel(configRepo, cb, "N1QL query on config collection")
+Rel(auditRepo, cb, "KV insert on audit collection")
+Rel(ctrl, tenantCtx, "Reads tenant scope")
+
+@enduml

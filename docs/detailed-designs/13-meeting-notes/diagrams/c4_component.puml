@@ -1,0 +1,26 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram — Meeting Notes (Feature 13)
+
+Container_Boundary(api, "ArchQ API") {
+    Component(ctrl, "MeetingNoteController", "REST Controller", "CRUD endpoints for /api/adrs/{id}/meeting-notes")
+    Component(svc, "MeetingNoteService", "Service", "Validates fields, checks ADR status, orchestrates CRUD")
+    Component(mnRepo, "MeetingNoteRepository", "Repository", "CRUD for meeting_notes collection")
+    Component(adrRepo, "AdrRepository", "Repository", "Loads ADR to verify status is Draft or InReview")
+    Component(auditRepo, "AuditRepository", "Repository", "Records meeting note creation/update in audit trail")
+    Component(tenantCtx, "TenantContext", "Middleware", "Extracts tenant slug from JWT")
+}
+
+ContainerDb(cb, "Couchbase", "archq bucket", "Scopes: {tenant_slug}. Collections: meeting_notes, adrs, audit")
+
+Rel(ctrl, svc, "Delegates CRUD operations")
+Rel(svc, adrRepo, "Loads ADR for status check")
+Rel(svc, mnRepo, "Creates / reads / updates / deletes meeting notes")
+Rel(svc, auditRepo, "Writes audit entries")
+Rel(mnRepo, cb, "N1QL / KV ops on meeting_notes")
+Rel(adrRepo, cb, "KV GET on adrs")
+Rel(auditRepo, cb, "KV INSERT on audit")
+Rel(ctrl, tenantCtx, "Reads tenant scope")
+
+@enduml

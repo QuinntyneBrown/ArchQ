@@ -1,0 +1,36 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — User Login & Session (API Service)
+
+Container_Boundary(api, "API Service") {
+    Component(ctrl, "AuthController", "Express Router", "POST /api/auth/login\nPOST /api/auth/refresh\nPOST /api/auth/logout")
+    Component(auth, "AuthenticationService", "Service", "Validates credentials, coordinates login flow")
+    Component(token, "TokenService", "Service", "Creates/validates JWT access and refresh tokens\nRS256 signing, 15min/7d expiry")
+    Component(hash, "PasswordHasher", "Utility", "Bcrypt verify with cost factor 12")
+    Component(lockout, "LockoutService", "Service", "Tracks failures, enforces 5/10min/15min lockout")
+    Component(grepo, "GlobalUserRepository", "Repository", "Email-to-tenant lookup in _system.global_users")
+    Component(urepo, "UserRepository", "Repository", "User document access in {tenant}.users")
+    Component(rrepo, "RefreshTokenRepository", "Repository", "Refresh token persistence and rotation\nin _system.refresh_tokens")
+    Component(audit, "AuditService", "Service", "Records login attempts, lockouts, refreshes")
+}
+
+ContainerDb(cb, "Couchbase Cluster", "Couchbase 7+", "_system.global_users\n_system.refresh_tokens\n{tenant}.users\n{tenant}.audit")
+System_Ext(email, "Email Service", "Lockout notification emails")
+
+Rel(ctrl, auth, "Invokes login/logout")
+Rel(ctrl, token, "Invokes refresh")
+Rel(auth, grepo, "Looks up email")
+Rel(auth, urepo, "Retrieves user")
+Rel(auth, hash, "Verifies password")
+Rel(auth, lockout, "Checks/records lockout")
+Rel(auth, token, "Issues tokens")
+Rel(auth, rrepo, "Persists refresh token")
+Rel(auth, audit, "Records audit")
+Rel(lockout, email, "Sends lockout notice")
+Rel(grepo, cb, "KV", "_system.global_users")
+Rel(urepo, cb, "KV/N1QL", "{tenant}.users")
+Rel(rrepo, cb, "KV", "_system.refresh_tokens")
+
+SHOW_LEGEND()
+@enduml

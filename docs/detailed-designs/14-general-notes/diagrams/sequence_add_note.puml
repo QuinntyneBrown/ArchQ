@@ -1,0 +1,82 @@
+@startuml sequence_add_note
+title Sequence — Add General Note to ADR
+
+actor Author
+participant "NoteController" as ctrl
+participant "TenantContext" as tenant
+participant "NoteService" as svc
+participant "AdrRepository" as adrRepo
+participant "NoteRepository" as noteRepo
+participant "AuditRepository" as auditRepo
+database "Couchbase\n{tenant}.adrs" as cb_adrs
+database "Couchbase\n{tenant}.notes" as cb_notes
+database "Couchbase\n{tenant}.audit" as cb_audit
+
+Author -> ctrl : POST /api/adrs/{adrId}/notes\n{ title: "Alternative approaches",\n  body: "## Option A\n..." }
+ctrl -> tenant : getTenantSlug()
+tenant --> ctrl : "acme-corp"
+ctrl -> svc : createNote(adrId, request, userId)
+
+== Validate ADR Status ==
+svc -> adrRepo : findById(adrId)
+adrRepo -> cb_adrs : KV GET adrId
+cb_adrs --> adrRepo : AdrDocument (status=Draft)
+adrRepo --> svc : AdrDocument
+
+svc -> svc : validateAdrStatus(adr)
+note right: status=Draft -> Allowed\n(Draft and InReview permitted)
+
+== Validate Request Fields ==
+svc -> svc : validateRequest(request)
+note right
+  Checks:
+  - title is non-empty, <= 200 chars
+  - body is non-empty, <= 50000 chars
+end note
+
+== Persist Note ==
+svc -> svc : Generate UUID\nSet authorId = userId\nSet createdAt = updatedAt = now()
+svc -> noteRepo : insert(noteDocument)
+noteRepo -> cb_notes : KV INSERT note-uuid
+cb_notes --> noteRepo : success
+noteRepo --> svc : NoteDocument
+
+== Audit ==
+svc -> auditRepo : append({entityType:"note",\nentityId:"note-uuid",\naction:"created",\nperformedBy:userId})
+auditRepo -> cb_audit : KV INSERT audit-uuid
+cb_audit --> auditRepo : success
+
+svc --> ctrl : NoteDocument
+ctrl --> Author : 201 Created\n{ id, adrId, title, body,\n  authorId, createdAt, updatedAt }
+
+== Error Scenario: Finalized ADR ==
+
+Author -> ctrl : POST /api/adrs/{adrId}/notes\n{ ... }
+ctrl -> svc : createNote(adrId, request, userId)
+
+svc -> adrRepo : findById(adrId)
+adrRepo -> cb_adrs : KV GET adrId
+cb_adrs --> adrRepo : AdrDocument (status=Approved)
+adrRepo --> svc : AdrDocument
+
+svc -> svc : validateAdrStatus(adr)
+note right #Pink: status=Approved -> REJECTED
+
+svc --> ctrl : throw ValidationException("ADR_FINALIZED")
+ctrl --> Author : 422 Unprocessable Entity\n{ error: "ADR_FINALIZED",\n  message: "Cannot modify notes\n  on a finalized ADR." }
+
+== Error Scenario: Edit After Finalized ==
+
+Author -> ctrl : PUT /api/adrs/{adrId}/notes/{noteId}\n{ title: "Updated title" }
+ctrl -> svc : updateNote(noteId, request, userId)
+
+svc -> adrRepo : findById(adrId)
+adrRepo --> svc : AdrDocument (status=Rejected)
+
+svc -> svc : validateAdrStatus(adr)
+note right #Pink: status=Rejected -> REJECTED
+
+svc --> ctrl : throw ValidationException("ADR_FINALIZED")
+ctrl --> Author : 422 Unprocessable Entity\n{ error: "ADR_FINALIZED" }
+
+@enduml

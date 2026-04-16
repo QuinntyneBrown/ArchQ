@@ -1,0 +1,99 @@
+@startuml sequence_list_adrs
+title Sequence — List & Browse ADRs (Feature 08)
+
+actor User
+participant "AdrListPage" as Page
+participant "AdrFilterBar" as Filter
+participant "AdrTable /\nAdrCardList" as Display
+participant "CursorPagination" as Pager
+participant "AdrClientService" as Client
+participant "AdrController" as Controller
+participant "TenantContext" as Tenant
+participant "AdrService" as Service
+participant "AdrRepository" as AdrRepo
+participant "UserRepository" as UserRepo
+database "Couchbase\n(tenant scope)" as CB
+
+== Initial Page Load ==
+
+User -> Page : Navigate to /adrs
+Page -> Page : useBreakpoint()\n=> "desktop" | "tablet" | "mobile"
+Page -> Client : listAdrs(tenantSlug, {\n  filters: {},\n  sortField: "updatedAt",\n  sortDirection: "desc",\n  cursor: null,\n  pageSize: 25 })
+Client -> Controller : GET /api/tenants/{slug}/adrs\n  ?sortField=updatedAt\n  &sortDirection=desc\n  &pageSize=25\nAuthorization: Bearer {jwt}
+Controller -> Tenant : extractTenant(jwt)
+Tenant --> Controller : tenantSlug verified
+Controller -> Controller : validate AdrListQueryDto
+Controller -> Service : listAdrs(tenantSlug, params)
+
+Service -> Service : buildN1qlFilter(params)\n=> WHERE type = "adr"
+Service -> Service : buildSortClause("updatedAt", "desc")\n=> ORDER BY updatedAt DESC
+Service -> AdrRepo : findWithFilters(tenantSlug,\n  filter, sort, limit=26, cursor=null)
+note right
+  Fetch limit+1 (26) to detect
+  if a next page exists
+end note
+
+AdrRepo -> CB : SELECT a.*\nFROM `archq`.`{tenantSlug}`.adrs a\nWHERE a.type = "adr"\nORDER BY a.updatedAt DESC\nLIMIT 26
+CB --> AdrRepo : AdrDocument[] (up to 26)
+AdrRepo --> Service : AdrDocument[]
+
+Service -> Service : hasNextPage = (results.length > 25)\nTrim to 25 items
+Service -> Service : encodeCursor(lastItem)\n=> base64({ sortValue, docId, direction })
+
+Service -> UserRepo : findByIds(tenantSlug, uniqueAuthorIds)
+UserRepo -> CB : SELECT u.id, u.displayName, u.avatarUrl\nFROM `archq`.`{tenantSlug}`.users u\nWHERE u.id IN $authorIds
+CB --> UserRepo : UserDocument[]
+UserRepo --> Service : author map
+
+Service -> Service : Map AdrDocuments to AdrSummary[]\nwith author names and avatars
+Service --> Controller : AdrListResponse {\n  items: AdrSummary[25],\n  nextCursor: "...",\n  prevCursor: null,\n  totalCount: 42 }
+Controller --> Client : 200 AdrListResponse
+Client --> Page : AdrListResponse
+
+alt breakpoint == "desktop"
+    Page -> Display : Render AdrTable\nwith sortable columns
+else breakpoint == "tablet"
+    Page -> Display : Render condensed table\nwith fewer columns
+else breakpoint == "mobile"
+    Page -> Display : Render AdrCardList\nwith card layout
+end
+Page -> Pager : Render CursorPagination\n(next enabled, prev disabled)
+Page --> User : ADR list displayed
+
+== Apply Filters ==
+
+User -> Filter : Select status="draft",\nauthor="Alice"
+Filter -> Page : onFilterChange({ status: "draft",\n  authorId: "user::alice" })
+Page -> Client : listAdrs(tenantSlug, {\n  filters: { status: "draft",\n    authorId: "user::alice" },\n  sortField: "updatedAt",\n  sortDirection: "desc",\n  cursor: null,\n  pageSize: 25 })
+Client -> Controller : GET /api/tenants/{slug}/adrs\n  ?status=draft\n  &authorId=user::alice\n  &sortField=updatedAt\n  &sortDirection=desc\n  &pageSize=25
+
+Controller -> Service : listAdrs(tenantSlug, params)
+Service -> Service : buildN1qlFilter(params)\n=> WHERE type = "adr"\n  AND status = "draft"\n  AND authorId = $authorId
+Service -> AdrRepo : findWithFilters(...)
+AdrRepo -> CB : SELECT a.*\nFROM `archq`.`{tenantSlug}`.adrs a\nWHERE a.type = "adr"\n  AND a.status = "draft"\n  AND a.authorId = $authorId\nORDER BY a.updatedAt DESC\nLIMIT 26
+CB --> AdrRepo : filtered results
+AdrRepo --> Service : AdrDocument[]
+Service --> Controller : AdrListResponse
+Controller --> Client : 200 AdrListResponse
+Client --> Page : filtered results
+Page --> User : Filtered ADR list
+
+== Next Page ==
+
+User -> Pager : Click "Next"
+Pager -> Page : onNextPage()
+Page -> Client : listAdrs(tenantSlug, {\n  ...,\n  cursor: nextCursor })
+Client -> Controller : GET /api/tenants/{slug}/adrs\n  ?cursor={nextCursor}&pageSize=25
+
+Controller -> Service : listAdrs(tenantSlug, params)
+Service -> Service : decodeCursor(cursor)\n=> { sortValue, docId, direction: "next" }
+Service -> AdrRepo : findWithFilters(...,\n  cursorCondition:\n  "(updatedAt < $sortValue\n   OR (updatedAt = $sortValue\n       AND META().id > $docId))")
+AdrRepo -> CB : SELECT ... WHERE ...\n  AND (a.updatedAt < $sv\n       OR (a.updatedAt = $sv\n           AND META(a).id > $did))\nORDER BY a.updatedAt DESC\nLIMIT 26
+CB --> AdrRepo : next page results
+AdrRepo --> Service : AdrDocument[]
+Service --> Controller : AdrListResponse\n  { prevCursor: "...", nextCursor: "..." }
+Controller --> Client : 200 AdrListResponse
+Client --> Page : page 2 results
+Page --> User : Page 2 displayed
+
+@enduml

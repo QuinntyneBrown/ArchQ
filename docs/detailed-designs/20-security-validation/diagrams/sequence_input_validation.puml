@@ -1,0 +1,68 @@
+@startuml sequence_input_validation
+title Sequence Diagram — Input Validation Pipeline
+
+actor "API Client" as Client
+participant "HttpsRedirect\nMiddleware" as HTTPS
+participant "RequestSize\nLimiter" as Size
+participant "SecurityHeaders\nMiddleware" as SecHeaders
+participant "CorsMiddleware" as CORS
+participant "JwtAuth\nMiddleware" as JWT
+participant "TenantContext\nMiddleware" as Tenant
+participant "RateLimiter" as Rate
+participant "SchemaValidator" as Schema
+participant "InputSanitizer" as Sanitizer
+participant "Controller" as Ctrl
+participant "MarkdownSanitizer" as MdSan
+
+Client -> HTTPS : POST /api/adrs\n(HTTP or HTTPS)
+
+alt HTTP in production
+    HTTPS --> Client : 301 Redirect to HTTPS
+else HTTPS
+    HTTPS -> Size : Forward request
+
+    alt Body > 1 MB
+        Size --> Client : 413 Payload Too Large
+    else Within limit
+        Size -> SecHeaders : Forward request
+        SecHeaders -> SecHeaders : Set HSTS, CSP,\nX-Frame-Options, etc.
+        SecHeaders -> CORS : Forward request
+
+        alt Invalid origin
+            CORS --> Client : CORS error (blocked)
+        else Valid origin
+            CORS -> JWT : Forward request
+            JWT -> JWT : Extract access_token\nfrom HttpOnly cookie
+
+            alt Missing or invalid JWT
+                JWT --> Client : 401 Unauthorized
+            else Expired JWT
+                JWT --> Client : 401 { error: "TOKEN_EXPIRED" }
+            else Valid JWT
+                JWT -> Tenant : Forward (req.user populated)
+                Tenant -> Tenant : Extract tenant_slug\nfrom JWT claims
+                Tenant -> Rate : Forward (req.tenantContext set)
+
+                alt Rate limit exceeded
+                    Rate --> Client : 429 Too Many Requests\n{ retryAfter: 54 }
+                else Within limit
+                    Rate -> Schema : Forward request
+                    Schema -> Schema : Validate body against\nJSON schema (AJV)
+
+                    alt Validation fails
+                        Schema --> Client : 400 {\n  error: "VALIDATION_ERROR",\n  details: [{ field, message }]\n}
+                    else Valid schema
+                        Schema -> Sanitizer : Forward request
+                        Sanitizer -> Sanitizer : Trim, normalize Unicode,\nstrip control chars
+                        Sanitizer -> Ctrl : Forward sanitized request
+                        Ctrl -> MdSan : sanitize(body) if Markdown
+                        MdSan --> Ctrl : Clean Markdown
+                        Ctrl --> Client : 201 Created
+                    end
+                end
+            end
+        end
+    end
+end
+
+@enduml

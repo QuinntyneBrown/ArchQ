@@ -1,0 +1,24 @@
+@startuml c4_container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 Container Diagram — ArchQ Tenant Provisioning
+
+Person(admin, "Admin User", "Provisions organizations")
+Person(user, "End User", "Operates within tenant context")
+
+System_Boundary(archq, "ArchQ System") {
+    Container(spa, "Web Application", "SPA / JavaScript", "Responsive frontend with org management UI")
+    Container(api, "API Service", "Node.js / Express", "Handles tenant provisioning, auth, and business logic")
+    ContainerDb(cb, "Couchbase Cluster", "Couchbase 7+", "One scope per tenant; _system scope for global data")
+}
+
+System_Ext(email, "Email Service", "Transactional email delivery")
+
+Rel(admin, spa, "Manages tenants", "HTTPS")
+Rel(user, spa, "Uses application", "HTTPS")
+Rel(spa, api, "API calls", "HTTPS / JSON")
+Rel(api, cb, "Reads/writes tenant data", "Couchbase SDK")
+Rel(api, email, "Sends notifications", "SMTP/API")
+
+SHOW_LEGEND()
+@enduml

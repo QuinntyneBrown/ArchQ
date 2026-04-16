@@ -1,0 +1,66 @@
+@startuml sequence_assign_approvers
+title Sequence — Assign Approvers (Draft -> InReview)
+
+actor Author
+participant "WorkflowController" as ctrl
+participant "TenantContext" as tenant
+participant "WorkflowService" as wfSvc
+participant "ApproverAssignment\nValidator" as validator
+participant "UserRepository" as userRepo
+participant "AdrRepository" as adrRepo
+database "Couchbase\n{tenant}.users" as cb_users
+database "Couchbase\n{tenant}.adrs" as cb_adrs
+
+Author -> ctrl : POST /api/adrs/{id}/transitions\n{ targetStatus: "InReview",\n  approverIds: ["R1","R2"] }
+ctrl -> tenant : getTenantSlug()
+tenant --> ctrl : "acme-corp"
+ctrl -> wfSvc : transitionAdr(adrId, request, authorId)
+
+wfSvc -> adrRepo : findById(adrId)
+adrRepo -> cb_adrs : KV GET adrId
+cb_adrs --> adrRepo : AdrDocument (status=Draft)
+adrRepo --> wfSvc : AdrDocument
+
+wfSvc -> validator : validate(authorId, ["R1","R2"], "acme-corp")
+
+validator -> validator : Check duplicates in ["R1","R2"]
+note right: No duplicates found
+
+validator -> validator : Check self-assignment\n(authorId not in approverIds)
+note right: Author ID not in list
+
+validator -> userRepo : findByIds(["R1","R2"])
+userRepo -> cb_users : N1QL: SELECT ... WHERE META().id IN ["R1","R2"]
+cb_users --> userRepo : [User R1 (roles:["Reviewer"]),\n User R2 (roles:["Reviewer"])]
+userRepo --> validator : [UserDocument, UserDocument]
+
+validator -> validator : Check each user has Reviewer role
+note right: Both have Reviewer role
+
+validator --> wfSvc : ValidationResult(valid=true)
+
+wfSvc -> wfSvc : Build ApproverEntry[] with status="pending"
+wfSvc -> wfSvc : adr.status = InReview\nadr.approvers = entries
+
+wfSvc -> adrRepo : save(adr, cas)
+adrRepo -> cb_adrs : KV REPLACE adrId
+cb_adrs --> adrRepo : success
+adrRepo --> wfSvc : updated AdrDocument
+
+wfSvc --> ctrl : updated AdrDocument
+ctrl --> Author : 200 OK\n{ status: "InReview", approvers: [...] }
+
+== Validation Failure Scenario ==
+
+Author -> ctrl : POST /api/adrs/{id}/transitions\n{ targetStatus: "InReview",\n  approverIds: ["authorId"] }
+ctrl -> wfSvc : transitionAdr(adrId, request, authorId)
+
+wfSvc -> validator : validate(authorId, ["authorId"], "acme-corp")
+validator -> validator : Check self-assignment
+note right #Pink: authorId is in approverIds!
+validator --> wfSvc : ValidationResult(valid=false,\nerrors: [{rule:"SELF_ASSIGNMENT"}])
+
+wfSvc --> ctrl : throw ValidationException
+ctrl --> Author : 422 Unprocessable Entity\n{ error: "VALIDATION_FAILED",\n  details: [...] }
+
+@enduml

@@ -1,0 +1,76 @@
+@startuml sequence_assign_role
+title Sequence Diagram — Assign Role to User
+
+actor "Admin" as Client
+participant "RoleController" as Ctrl
+participant "AuthorizationGuard" as Guard
+participant "RolePolicy" as Policy
+participant "RoleService" as Svc
+participant "UserRepository" as URepo
+participant "AuditService" as Audit
+database "Couchbase\n{tenant}.users" as UsersDB
+database "Couchbase\n{tenant}.audit" as AuditDB
+
+Client -> Ctrl : POST /api/tenants/:tenantId/users/:userId/roles\n{ role: "reviewer" }\nCookie: archq_access=<admin-jwt>
+activate Ctrl
+
+Ctrl -> Guard : requireRole("admin")
+activate Guard
+
+Guard -> Guard : Extract roles from JWT claims
+Guard -> Policy : canPerform(["admin"], "role.assign")
+activate Policy
+Policy --> Guard : true
+deactivate Policy
+
+note right of Guard: For role changes, also\ncheck live DB roles
+Guard -> URepo : findById(adminUserId)
+activate URepo
+URepo -> UsersDB : GET user::{adminId}
+UsersDB --> URepo : { roles: ["admin"] }
+URepo --> Guard : admin user (confirmed)
+deactivate URepo
+
+Guard --> Ctrl : Authorized
+deactivate Guard
+
+Ctrl -> Svc : addRole(targetUserId, "reviewer", adminUserId)
+activate Svc
+
+Svc -> Svc : RolePolicy.isValidRole("reviewer")\n=> true
+
+Svc -> URepo : findById(targetUserId)
+activate URepo
+URepo -> UsersDB : GET user::{targetUserId}
+UsersDB --> URepo : { roles: ["author"] }
+URepo --> Svc : targetUser
+deactivate URepo
+
+Svc -> Svc : Check if user already has role\n=> "reviewer" not in ["author"]
+
+Svc -> Svc : validateRoleChange(targetUserId,\n["author", "reviewer"], adminUserId)
+note right: Validates:\n- Not self-promoting\n- Not removing last admin\n- Valid role combination
+
+Svc -> URepo : update({ ...targetUser,\nroles: ["author", "reviewer"] })
+activate URepo
+URepo -> UsersDB : UPSERT user::{targetUserId}\nwith updated roles array
+UsersDB --> URepo : MutationResult
+URepo --> Svc : OK
+deactivate URepo
+
+Svc -> Audit : record({\naction: "ROLE_ASSIGNED",\nactorId: adminUserId,\ntargetUserId: targetUserId,\ndetails: {\n  role: "reviewer",\n  previousRoles: ["author"],\n  newRoles: ["author", "reviewer"]\n}})
+activate Audit
+Audit -> AuditDB : UPSERT audit::{ts}::{id}
+AuditDB --> Audit : OK
+Audit --> Svc : OK
+deactivate Audit
+
+Svc --> Ctrl : UserRoleResult {\nuserId, roles: ["author", "reviewer"] }
+deactivate Svc
+
+Ctrl --> Client : 200 OK\n{\n  userId: "...",\n  roles: ["author", "reviewer"],\n  updatedAt: "2026-04-15T10:05:00Z"\n}
+deactivate Ctrl
+
+note over Client: Target user's next token refresh\nwill include updated roles.\nSensitive ops check DB immediately.
+
+@enduml

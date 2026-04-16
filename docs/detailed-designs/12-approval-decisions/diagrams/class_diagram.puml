@@ -1,0 +1,92 @@
+@startuml class_diagram
+title Class Diagram — Approval Decisions (Feature 12)
+
+enum DecisionType {
+    approved
+    rejected
+}
+
+enum ThresholdResultType {
+    THRESHOLD_MET
+    REJECTED
+    PENDING
+}
+
+class DecisionRequest {
+    +decision: DecisionType
+    +comment: string?
+}
+
+class ApproverEntry {
+    +userId: string
+    +status: "pending" | "approved" | "rejected" | "cleared"
+    +comment: string?
+    +decidedAt: DateTime?
+}
+
+class AdrDocument {
+    +id: string
+    +type: string = "adr"
+    +status: AdrStatus
+    +authorId: string
+    +approvers: ApproverEntry[]
+    +updatedAt: DateTime
+}
+
+class TenantConfig {
+    +type: string = "tenant_config"
+    +tenantId: string
+    +approvalThreshold: int
+    +updatedAt: DateTime
+    +updatedBy: string
+}
+
+class ThresholdResult {
+    +result: ThresholdResultType
+    +approvedCount: int
+    +threshold: int
+    +rejectedBy: string?
+    +rejectionComment: string?
+}
+
+class ApprovalService {
+    -adrRepo: AdrRepository
+    -configRepo: ConfigRepository
+    -workflowService: WorkflowService
+    +recordDecision(adrId: string, userId: string, request: DecisionRequest): AdrDocument
+    +evaluateThreshold(adr: AdrDocument, tenantSlug: string): ThresholdResult
+    -findApproverEntry(adr: AdrDocument, userId: string): ApproverEntry
+    -validateNoDuplicate(entry: ApproverEntry): void
+}
+
+class ApprovalController {
+    -approvalService: ApprovalService
+    -tenantContext: TenantContext
+    +postDecision(adrId: string, body: DecisionRequest): Response
+}
+
+class ConfigRepository {
+    -tenantContext: TenantContext
+    +getApprovalThreshold(): int
+    +updateApprovalThreshold(threshold: int, adminId: string): TenantConfig
+}
+
+class AdrRepository {
+    -tenantContext: TenantContext
+    +findById(id: string): AdrDocument
+    +save(adr: AdrDocument, cas: long): AdrDocument
+}
+
+class WorkflowService {
+    +transition(adr: AdrDocument, targetStatus: AdrStatus): AdrDocument
+}
+
+AdrDocument *-- "1..*" ApproverEntry
+ApprovalController --> ApprovalService
+ApprovalService --> AdrRepository
+ApprovalService --> ConfigRepository
+ApprovalService --> WorkflowService
+ApprovalService --> ThresholdResult
+ConfigRepository ..> TenantConfig : reads/writes
+
+@enduml

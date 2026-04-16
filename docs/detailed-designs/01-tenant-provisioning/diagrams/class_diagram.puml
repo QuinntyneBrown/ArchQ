@@ -1,0 +1,156 @@
+@startuml class_diagram
+title Class Diagram — Tenant Provisioning
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Controllers" {
+    class TenantController {
+        -tenantService: TenantService
+        +createTenant(req, res): Promise<void>
+        +getTenant(req, res): Promise<void>
+        +updateTenant(req, res): Promise<void>
+        +deleteTenant(req, res): Promise<void>
+    }
+}
+
+package "Services" {
+    class TenantService {
+        -tenantRepository: TenantRepository
+        -provisioner: CouchbaseProvisioner
+        -slugGenerator: SlugGenerator
+        -auditService: AuditService
+        +createTenant(dto: CreateTenantDto): Promise<Tenant>
+        +getTenant(id: string): Promise<Tenant>
+        +updateTenant(id: string, dto: UpdateTenantDto): Promise<Tenant>
+        +softDeleteTenant(id: string): Promise<void>
+        -validateSlugUniqueness(slug: string): Promise<void>
+    }
+
+    class AuditService {
+        -auditRepository: AuditRepository
+        +record(entry: AuditEntry): Promise<void>
+    }
+}
+
+package "Repositories" {
+    abstract class TenantScopedRepository<T> {
+        #tenantContext: TenantContext
+        #bucket: Bucket
+        #collectionName: string
+        #collection: Collection
+        +getById(id: string): Promise<T | null>
+        +query(n1ql: string, params: object): Promise<T[]>
+        +upsert(id: string, doc: T): Promise<MutationResult>
+        +remove(id: string): Promise<void>
+        #getScope(): Scope
+        #getCollection(): Collection
+    }
+
+    class TenantRepository {
+        -bucket: Bucket
+        +findBySlug(slug: string): Promise<Tenant | null>
+        +findById(id: string): Promise<Tenant | null>
+        +create(tenant: Tenant): Promise<void>
+        +update(tenant: Tenant): Promise<void>
+        +slugExists(slug: string): Promise<boolean>
+    }
+
+    class AuditRepository {
+        +append(entry: AuditEntry): Promise<void>
+    }
+
+    AuditRepository --|> TenantScopedRepository
+}
+
+package "Infrastructure" {
+    class CouchbaseProvisioner {
+        -cluster: Cluster
+        -bucket: Bucket
+        +provisionScope(slug: string): Promise<void>
+        +createCollections(slug: string): Promise<void>
+        +createIndexes(slug: string): Promise<void>
+        +dropScope(slug: string): Promise<void>
+        -getRequiredCollections(): string[]
+    }
+
+    class SlugGenerator {
+        +generate(displayName: string): string
+        +validate(slug: string): ValidationResult
+        -isReserved(slug: string): boolean
+    }
+}
+
+package "Middleware" {
+    class TenantContextMiddleware {
+        +handle(req, res, next): void
+        -extractTenantFromJwt(token: JwtPayload): TenantContext
+    }
+
+    class TenantContext {
+        +tenantId: string
+        +tenantSlug: string
+        +userId: string
+        +roles: string[]
+    }
+}
+
+package "DTOs" {
+    class CreateTenantDto {
+        +displayName: string
+        +slug: string
+    }
+
+    class UpdateTenantDto {
+        +displayName?: string
+    }
+}
+
+package "Models" {
+    class Tenant {
+        +id: string
+        +displayName: string
+        +slug: string
+        +status: TenantStatus
+        +plan: string
+        +createdAt: Date
+        +createdBy: string
+        +updatedAt: Date
+        +settings: TenantSettings
+    }
+
+    class TenantSettings {
+        +maxUsers: number
+        +maxAdrs: number
+    }
+
+    enum TenantStatus {
+        ACTIVE
+        SUSPENDED
+        DELETED
+    }
+
+    class AuditEntry {
+        +id: string
+        +timestamp: Date
+        +action: string
+        +actorId: string
+        +resourceType: string
+        +resourceId: string
+        +details: object
+    }
+
+    Tenant --> TenantStatus
+    Tenant --> TenantSettings
+}
+
+TenantController --> TenantService
+TenantService --> TenantRepository
+TenantService --> CouchbaseProvisioner
+TenantService --> SlugGenerator
+TenantService --> AuditService
+AuditService --> AuditRepository
+TenantContextMiddleware --> TenantContext
+TenantScopedRepository --> TenantContext
+
+@enduml

@@ -1,0 +1,97 @@
+@startuml class_diagram
+title Class Diagram — General Notes (Feature 14)
+
+class NoteDocument {
+    +id: string
+    +type: string = "note"
+    +adrId: string
+    +title: string
+    +body: string (Markdown)
+    +authorId: string
+    +createdAt: DateTime
+    +updatedAt: DateTime
+}
+
+class CreateNoteRequest {
+    +title: string
+    +body: string
+}
+
+class UpdateNoteRequest {
+    +title: string?
+    +body: string?
+}
+
+class NoteListItem {
+    +id: string
+    +title: string
+    +authorId: string
+    +createdAt: DateTime
+    +updatedAt: DateTime
+}
+
+class PaginatedResult<T> {
+    +items: T[]
+    +totalCount: int
+    +page: int
+    +pageSize: int
+}
+
+class ValidationResult {
+    +valid: boolean
+    +errors: ValidationError[]
+}
+
+class ValidationError {
+    +field: string
+    +rule: string
+    +message: string
+}
+
+class NoteController {
+    -noteService: NoteService
+    -tenantContext: TenantContext
+    +postNote(adrId: string, body: CreateNoteRequest): Response
+    +getNotes(adrId: string, page: int, pageSize: int): Response
+    +getNote(adrId: string, noteId: string): Response
+    +putNote(adrId: string, noteId: string, body: UpdateNoteRequest): Response
+    +deleteNote(adrId: string, noteId: string): Response
+}
+
+class NoteService {
+    -noteRepo: NoteRepository
+    -adrRepo: AdrRepository
+    -auditRepo: AuditRepository
+    +createNote(adrId: string, request: CreateNoteRequest, userId: string): NoteDocument
+    +updateNote(noteId: string, request: UpdateNoteRequest, userId: string): NoteDocument
+    +deleteNote(noteId: string, userId: string): void
+    +listByAdr(adrId: string, page: int, pageSize: int): PaginatedResult<NoteListItem>
+    +getById(noteId: string): NoteDocument
+    -validateAdrStatus(adrId: string): void
+    -validateOwnership(note: NoteDocument, userId: string, userRoles: string[]): void
+    -validateRequest(request: CreateNoteRequest): ValidationResult
+}
+
+class NoteRepository {
+    -tenantContext: TenantContext
+    +insert(note: NoteDocument): NoteDocument
+    +findById(id: string): NoteDocument
+    +findByAdr(adrId: string, offset: int, limit: int): NoteListItem[]
+    +countByAdr(adrId: string): int
+    +update(note: NoteDocument, cas: long): NoteDocument
+    +delete(id: string, cas: long): void
+}
+
+class AdrRepository {
+    -tenantContext: TenantContext
+    +findById(id: string): AdrDocument
+}
+
+NoteController --> NoteService
+NoteService --> NoteRepository
+NoteService --> AdrRepository
+NoteService ..> ValidationResult : produces
+ValidationResult *-- "0..*" ValidationError
+NoteRepository ..> NoteDocument : persists
+
+@enduml

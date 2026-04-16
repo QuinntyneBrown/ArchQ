@@ -1,0 +1,39 @@
+@startuml sequence_tenant_isolation
+title Sequence Diagram — Tenant Isolation (Cross-Tenant Access Returns 404)
+
+actor "User (Tenant: acme-corp)" as User
+participant "JwtAuthMiddleware" as JWT
+participant "TenantContext\nMiddleware" as TenantMW
+participant "AdrController" as Ctrl
+participant "AdrRepository" as Repo
+database "Couchbase\nScope: acme-corp" as CB_Acme
+database "Couchbase\nScope: beta-inc" as CB_Beta
+
+note over User : User has JWT with\ntenant_slug = "acme-corp"
+note over CB_Beta : ADR "adr-xyz" exists here\n(belongs to beta-inc tenant)
+
+User -> JWT : GET /api/adrs/adr-xyz\nCookie: access_token=eyJ...
+
+JWT -> JWT : Verify JWT signature\nExtract claims:\n  sub: "user-123"\n  tenant_slug: "acme-corp"\n  role: "Author"
+JWT -> TenantMW : req.user populated
+
+TenantMW -> TenantMW : tenantContext = {\n  tenantSlug: "acme-corp"\n}\n(from JWT, NOT from request)
+
+TenantMW -> Ctrl : req.tenantContext set
+
+Ctrl -> Repo : findById("adr-xyz")
+
+note over Repo : Repository resolves collection:\nbucket.scope("acme-corp").collection("adrs")\n\nQuery runs ONLY against acme-corp scope
+
+Repo -> CB_Acme : collection.get("adr::adr-xyz")
+CB_Acme --> Repo : DocumentNotFoundException\n(adr-xyz does not exist in acme-corp)
+
+note over CB_Beta : adr-xyz exists HERE\nbut was never queried
+
+Repo --> Ctrl : null
+
+note over Ctrl : Returns 404, NOT 403.\n403 would reveal that the\nresource exists in another tenant.
+
+Ctrl --> User : 404 Not Found\n{\n  "error": "NOT_FOUND",\n  "message": "The requested resource was not found."\n}
+
+@enduml

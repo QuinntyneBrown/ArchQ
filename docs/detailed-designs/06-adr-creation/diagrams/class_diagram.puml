@@ -1,0 +1,160 @@
+@startuml class_diagram
+title Class Diagram - ADR Creation (Feature 06)
+
+package "Frontend" {
+    class AdrEditorPage {
+        - title: string
+        - body: string
+        - isDirty: boolean
+        - templateWarnings: string[]
+        + onSaveDraft(): void
+        + onDiscard(): void
+        + onTitleChange(value: string): void
+        + onBodyChange(value: string): void
+        + validateTemplateSections(): string[]
+    }
+
+    class MarkdownEditor {
+        - content: string
+        - fontFamily: string
+        + onChange(content): void
+        + insertBold(): void
+        + insertItalic(): void
+        + insertHeading(level): void
+        + insertCodeBlock(): void
+        + insertLink(): void
+        + insertList(ordered): void
+        + insertImage(): void
+    }
+
+    class MarkdownPreview {
+        - html: string
+        + render(markdown: string): string
+    }
+
+    class AdrClientService {
+        + createAdr(tenantSlug, dto): Promise
+        + getTemplate(tenantSlug): Promise
+    }
+}
+
+package "API - Controllers" {
+    class AdrController {
+        + create(tenantSlug: string, dto: CreateAdrDto): AdrResponse
+    }
+
+    class TemplateController {
+        + getTemplate(tenantSlug: string): TemplateResponse
+        + updateTemplate(tenantSlug: string, dto: UpdateTemplateDto): TemplateResponse
+    }
+}
+
+package "API - Services" {
+    class AdrService {
+        - adrRepository: AdrRepository
+        - sequenceGenerator: AdrSequenceGenerator
+        - templateService: TemplateService
+        - auditService: AuditService
+        + createAdr(tenantSlug: string, authorId: string, dto: CreateAdrDto): AdrDocument
+        + validateSections(body: string, template: TemplateDocument): string[]
+    }
+
+    class TemplateService {
+        - configRepository: ConfigRepository
+        + getTenantTemplate(tenantSlug: string): TemplateDocument
+        + updateTenantTemplate(tenantSlug: string, dto: UpdateTemplateDto): TemplateDocument
+        + getSystemDefault(): TemplateDocument
+        + validateRequiredSections(template: string): string[]
+    }
+
+    class AdrSequenceGenerator {
+        - adrRepository: AdrRepository
+        + nextNumber(tenantSlug: string): string
+    }
+
+    class AuditService {
+        + record(tenantSlug: string, event: AuditEvent): void
+    }
+}
+
+package "API - Repositories" {
+    class AdrRepository {
+        - cluster: CouchbaseCluster
+        + insert(tenantSlug: string, doc: AdrDocument): AdrDocument
+        + findMaxAdrNumber(tenantSlug: string): number
+    }
+
+    class ConfigRepository {
+        - cluster: CouchbaseCluster
+        + getByKey(tenantSlug: string, key: string): ConfigDocument
+        + upsert(tenantSlug: string, key: string, doc: ConfigDocument): ConfigDocument
+    }
+}
+
+package "Domain - Documents" {
+    class AdrDocument {
+        + id: string
+        + type: string
+        + adrNumber: string
+        + title: string
+        + body: string
+        + status: AdrStatus
+        + authorId: string
+        + tags: string[]
+        + version: number
+        + createdAt: string
+        + updatedAt: string
+    }
+
+    class TemplateDocument {
+        + id: string
+        + type: string
+        + key: string
+        + body: string
+        + requiredSections: string[]
+        + updatedAt: string
+        + updatedBy: string
+    }
+
+    enum AdrStatus {
+        DRAFT
+        IN_REVIEW
+        APPROVED
+        REJECTED
+        SUPERSEDED
+        DEPRECATED
+    }
+
+    class CreateAdrDto {
+        + title: string
+        + body: string
+        + tags: string[]
+    }
+
+    class AdrResponse {
+        + id: string
+        + adrNumber: string
+        + title: string
+        + status: string
+        + version: number
+        + createdAt: string
+    }
+}
+
+AdrEditorPage --> MarkdownEditor
+AdrEditorPage --> MarkdownPreview
+AdrEditorPage --> AdrClientService
+AdrClientService --> AdrController
+AdrController --> AdrService
+AdrService --> AdrRepository
+AdrService --> AdrSequenceGenerator
+AdrService --> AuditService
+AdrService --> TemplateService
+TemplateController --> TemplateService
+TemplateService --> ConfigRepository
+AdrSequenceGenerator --> AdrRepository
+AdrDocument --> AdrStatus
+AdrService ..> CreateAdrDto
+AdrService ..> AdrDocument
+
+@enduml

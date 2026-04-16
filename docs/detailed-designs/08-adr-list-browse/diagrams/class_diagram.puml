@@ -1,0 +1,160 @@
+@startuml class_diagram
+title Class Diagram - ADR List and Browse (Feature 08)
+
+package "Frontend" {
+    class AdrListPage {
+        - adrs: AdrSummary[]
+        - filters: AdrListFilters
+        - sortField: string
+        - sortDirection: string
+        - cursor: string
+        - pageSize: number
+        - hasNextPage: boolean
+        - hasPrevPage: boolean
+        - breakpoint: string
+        + onFilterChange(filters: AdrListFilters): void
+        + onSortChange(field: string): void
+        + onNextPage(): void
+        + onPrevPage(): void
+        + onNewAdr(): void
+    }
+
+    class AdrFilterBar {
+        - searchQuery: string
+        - selectedStatus: string
+        - selectedAuthor: string
+        - selectedTags: string[]
+        - dateFrom: string
+        - dateTo: string
+        + onApply(): void
+        + onClear(): void
+    }
+
+    class AdrTable {
+        - columns: TableColumn[]
+        - rows: AdrSummary[]
+        - sortField: string
+        - sortDirection: string
+        + onHeaderClick(field: string): void
+        + onRowClick(adrId: string): void
+    }
+
+    class AdrCardList {
+        - cards: AdrSummary[]
+        + onCardClick(adrId: string): void
+    }
+
+    class CursorPagination {
+        - cursor: string
+        - hasNext: boolean
+        - hasPrev: boolean
+        + onNext(): void
+        + onPrev(): void
+    }
+
+    class AdrClientService {
+        + listAdrs(tenantSlug, params): Promise
+    }
+
+    class AdrListFilters {
+        + search: string
+        + status: string
+        + authorId: string
+        + tags: string[]
+        + dateFrom: string
+        + dateTo: string
+    }
+
+    class AdrListParams {
+        + filters: AdrListFilters
+        + sortField: string
+        + sortDirection: string
+        + cursor: string
+        + pageSize: number
+    }
+}
+
+package "API - Controllers" {
+    class AdrController {
+        + list(tenantSlug: string, query: AdrListQueryDto): AdrListResponse
+    }
+}
+
+package "API - Services" {
+    class AdrService {
+        - adrRepository: AdrRepository
+        - userRepository: UserRepository
+        + listAdrs(tenantSlug: string, params: AdrListQueryDto): AdrListResponse
+        - buildN1qlFilter(params: AdrListQueryDto): N1qlFilterClause
+        - buildSortClause(sortField: string, direction: string): string
+        - decodeCursor(cursor: string): CursorPayload
+        - encodeCursor(lastDoc: AdrDocument): string
+    }
+}
+
+package "API - Repositories" {
+    class AdrRepository {
+        + findWithFilters(tenantSlug: string, filter: N1qlFilterClause, sort: string, limit: number, cursorCondition: string): AdrDocument[]
+        + countWithFilters(tenantSlug: string, filter: N1qlFilterClause): number
+    }
+
+    class UserRepository {
+        + findByIds(tenantSlug: string, userIds: string[]): UserDocument[]
+    }
+}
+
+package "Domain - DTOs" {
+    class AdrListQueryDto {
+        + search: string
+        + status: string
+        + authorId: string
+        + tags: string[]
+        + dateFrom: string
+        + dateTo: string
+        + sortField: string
+        + sortDirection: string
+        + cursor: string
+        + pageSize: number
+    }
+
+    class AdrListResponse {
+        + items: AdrSummary[]
+        + nextCursor: string
+        + prevCursor: string
+        + totalCount: number
+    }
+
+    class AdrSummary {
+        + id: string
+        + adrNumber: string
+        + title: string
+        + status: string
+        + authorId: string
+        + authorName: string
+        + authorAvatarUrl: string
+        + tags: string[]
+        + updatedAt: string
+    }
+
+    class CursorPayload {
+        + sortValue: string
+        + docId: string
+        + direction: string
+    }
+}
+
+AdrListPage --> AdrFilterBar
+AdrListPage --> AdrTable
+AdrListPage --> AdrCardList
+AdrListPage --> CursorPagination
+AdrListPage --> AdrClientService
+AdrFilterBar --> AdrListFilters
+AdrClientService --> AdrController
+AdrController --> AdrService
+AdrService --> AdrRepository
+AdrService --> UserRepository
+AdrService ..> AdrListQueryDto
+AdrService ..> AdrListResponse
+AdrListResponse --> AdrSummary
+
+@enduml

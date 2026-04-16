@@ -1,0 +1,103 @@
+@startuml sequence_search
+title Sequence — ADR Full-Text Search (Feature 09)
+
+actor User
+participant "SearchBar" as Search
+participant "SearchResultsList" as Results
+participant "SearchClientService" as Client
+participant "SearchController" as Controller
+participant "TenantContext" as Tenant
+participant "SearchService" as Service
+participant "CouchbaseFtsClient" as FTS
+database "Couchbase FTS\n(tenant-scoped index)" as CB
+
+== User Types Search Query ==
+
+User -> Search : Types "event-driven" in search bar
+Search -> Search : Debounce 300ms
+Search -> Search : query.length >= 2?\n=> Yes, proceed
+
+Search -> Client : search(tenantSlug, {\n  query: "event-driven",\n  status: null,\n  pageSize: 20,\n  offset: 0 })
+Search -> Results : Set isLoading = true
+
+Client -> Controller : GET /api/tenants/{slug}/search\n  ?q=event-driven\n  &pageSize=20\n  &offset=0\nAuthorization: Bearer {jwt}
+Controller -> Tenant : extractTenant(jwt)
+Tenant --> Controller : tenantSlug verified
+Controller -> Controller : validate SearchQueryDto
+Controller -> Service : search(tenantSlug, params)
+
+== Build FTS Query ==
+
+Service -> Service : buildFtsRequest(tenantSlug, params)
+note right
+  FtsSearchRequest {
+    query: {
+      conjunction: [
+        {
+          disjunction: [
+            { match: "event-driven",
+              field: "title",
+              analyzer: "standard",
+              boost: 3.0 },
+            { match: "event-driven",
+              field: "body",
+              analyzer: "standard",
+              boost: 1.0 },
+            { match: "event-driven",
+              field: "tags",
+              analyzer: "keyword",
+              boost: 2.0 }
+          ]
+        }
+      ]
+    },
+    fields: ["adrNumber", "title",
+             "status", "body"],
+    highlight: {
+      style: "html",
+      fields: ["title", "body", "tags"]
+    },
+    size: 20,
+    from: 0,
+    sort: ["-_score"]
+  }
+end note
+
+== Execute FTS Query ==
+
+Service -> FTS : execute("idx_fts_adrs_{tenantSlug}",\nftsRequest)
+FTS -> CB : Search request with\nscope partition: {tenantSlug}\ncollection: adrs
+CB -> CB : Full-text search across\ntitle, body, tags fields\nRanked by BM25 score
+CB --> FTS : FtsSearchResponse {\n  totalHits: 8,\n  took: 12ms,\n  rows: FtsRow[] }
+FTS --> Service : FtsSearchResponse
+
+== Process Results ==
+
+Service -> Service : mapToSearchResults(ftsRows)
+loop for each FtsRow
+    Service -> Service : Extract adrNumber, title,\nstatus from fields
+    Service -> Service : extractSnippets(row.fragments)
+    note right
+      Concatenates fragment strings
+      from "body" field with "..."
+      separators. HTML highlight
+      tags (<mark>) preserved for
+      frontend rendering.
+    end note
+end
+
+Service --> Controller : SearchResponse {\n  results: SearchResult[8],\n  totalHits: 8,\n  took: 12 }
+Controller --> Client : 200 SearchResponse
+
+Client --> Search : SearchResponse
+Search -> Results : Set isLoading = false
+Results -> Results : Render results list
+
+Results --> User : Search results displayed:\n- ADR number + title\n- Status badge\n- Snippet with <mark>highlighted</mark> terms
+
+== User Clicks Result ==
+
+User -> Results : Clicks on "ADR-003"
+Results -> Results : Navigate to /adrs/ADR-003
+
+@enduml

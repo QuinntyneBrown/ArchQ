@@ -1,0 +1,91 @@
+@startuml class_diagram
+title Class Diagram — Meeting Notes (Feature 13)
+
+class MeetingNoteDocument {
+    +id: string
+    +type: string = "meeting_note"
+    +adrId: string
+    +title: string
+    +meetingDate: string (ISO date)
+    +attendees: string[]
+    +body: string (Markdown)
+    +authorId: string
+    +createdAt: DateTime
+    +updatedAt: DateTime
+}
+
+class CreateMeetingNoteRequest {
+    +title: string
+    +meetingDate: string
+    +attendees: string[]
+    +body: string
+}
+
+class UpdateMeetingNoteRequest {
+    +title: string?
+    +meetingDate: string?
+    +attendees: string[]?
+    +body: string?
+}
+
+class MeetingNoteListItem {
+    +id: string
+    +title: string
+    +meetingDate: string
+    +attendeeCount: int
+    +authorId: string
+    +createdAt: DateTime
+}
+
+class PaginatedResult<T> {
+    +items: T[]
+    +totalCount: int
+    +page: int
+    +pageSize: int
+}
+
+class MeetingNoteController {
+    -meetingNoteService: MeetingNoteService
+    -tenantContext: TenantContext
+    +postMeetingNote(adrId: string, body: CreateMeetingNoteRequest): Response
+    +getMeetingNotes(adrId: string, page: int, pageSize: int): Response
+    +getMeetingNote(adrId: string, noteId: string): Response
+    +putMeetingNote(adrId: string, noteId: string, body: UpdateMeetingNoteRequest): Response
+    +deleteMeetingNote(adrId: string, noteId: string): Response
+}
+
+class MeetingNoteService {
+    -meetingNoteRepo: MeetingNoteRepository
+    -adrRepo: AdrRepository
+    -auditRepo: AuditRepository
+    +createMeetingNote(adrId: string, request: CreateMeetingNoteRequest, userId: string): MeetingNoteDocument
+    +updateMeetingNote(noteId: string, request: UpdateMeetingNoteRequest, userId: string): MeetingNoteDocument
+    +deleteMeetingNote(noteId: string, userId: string): void
+    +listByAdr(adrId: string, page: int, pageSize: int): PaginatedResult<MeetingNoteListItem>
+    +getById(noteId: string): MeetingNoteDocument
+    -validateAdrStatus(adrId: string): void
+    -validateRequest(request: CreateMeetingNoteRequest): ValidationResult
+}
+
+class MeetingNoteRepository {
+    -tenantContext: TenantContext
+    +insert(note: MeetingNoteDocument): MeetingNoteDocument
+    +findById(id: string): MeetingNoteDocument
+    +findByAdr(adrId: string, offset: int, limit: int): MeetingNoteListItem[]
+    +countByAdr(adrId: string): int
+    +update(note: MeetingNoteDocument, cas: long): MeetingNoteDocument
+    +delete(id: string, cas: long): void
+}
+
+class AdrRepository {
+    -tenantContext: TenantContext
+    +findById(id: string): AdrDocument
+}
+
+MeetingNoteController --> MeetingNoteService
+MeetingNoteService --> MeetingNoteRepository
+MeetingNoteService --> AdrRepository
+MeetingNoteService ..> MeetingNoteDocument : creates/updates
+MeetingNoteRepository ..> MeetingNoteDocument : persists
+
+@enduml

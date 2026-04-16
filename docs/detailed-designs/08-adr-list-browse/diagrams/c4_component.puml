@@ -1,0 +1,44 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram — ADR List & Browse (Feature 08)
+
+Person(user, "Any Authenticated User", "Browses, filters, and paginates ADR list")
+
+Container_Boundary(spa, "Frontend SPA") {
+    Component(adrListPage, "AdrListPage", "React Component", "Orchestrates list view: filter bar, table/card layout, pagination")
+    Component(filterBar, "AdrFilterBar", "React Component", "Search input, status dropdown, author dropdown, tag multi-select, date range picker")
+    Component(adrTable, "AdrTable", "React Component", "Desktop sortable table with columns: Number, Title, Status, Author, Last Modified, Tags")
+    Component(adrCardList, "AdrCardList", "React Component", "Mobile card layout: ADR number, title, status badge, author, date")
+    Component(pagination, "CursorPagination", "React Component", "Next/Previous navigation using opaque cursor tokens")
+    Component(adrClientService, "AdrClientService", "TypeScript Service", "HTTP client for ADR list/filter/sort queries")
+    Component(responsiveHook, "useBreakpoint", "React Hook", "Detects viewport width to switch between table/card/condensed layouts")
+}
+
+Container_Boundary(api, "API Server") {
+    Component(adrController, "AdrController", "NestJS Controller", "GET /adrs — list with filters, sort, pagination")
+    Component(adrService, "AdrService", "NestJS Service", "Builds Couchbase N1QL query from filter/sort/pagination params")
+    Component(adrRepository, "AdrRepository", "Repository", "Executes parameterised N1QL queries scoped to tenant")
+    Component(userRepository, "UserRepository", "Repository", "Resolves author names for display")
+    Component(tenantContext, "TenantContext", "Middleware", "Extracts tenant slug from JWT")
+}
+
+ContainerDb(couchbase, "Couchbase", "archq bucket", "Scopes per tenant; collections: adrs, users")
+
+user --> adrListPage
+adrListPage --> filterBar
+adrListPage --> adrTable
+adrListPage --> adrCardList
+adrListPage --> pagination
+adrListPage --> adrClientService
+adrListPage --> responsiveHook
+
+adrClientService --> adrController : "GET /api/tenants/:slug/adrs?filters"
+adrController --> tenantContext
+adrController --> adrService
+adrService --> adrRepository
+adrService --> userRepository
+adrRepository --> couchbase
+userRepository --> couchbase
+
+@enduml

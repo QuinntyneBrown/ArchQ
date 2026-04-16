@@ -1,0 +1,57 @@
+@startuml sequence_add_tag
+title Sequence Diagram — Add Tag to ADR
+
+actor "Author / Admin" as User
+participant "TagController" as Ctrl
+participant "AuthorizationGuard" as Auth
+participant "TagService" as Svc
+participant "TagRepository" as TagRepo
+participant "AdrRepository" as AdrRepo
+participant "AuditService" as Audit
+database "Couchbase\n(tags)" as CBTags
+database "Couchbase\n(adrs)" as CBAdrs
+
+User -> Ctrl : POST /api/adrs/:adrId/tags\n{ tags: ["microservices"] }
+Ctrl -> Auth : requireRole(Author, Admin)
+
+alt Unauthorized role
+    Auth --> Ctrl : 403 Forbidden
+    Ctrl --> User : 403 { error: "FORBIDDEN" }
+else Authorized
+    Auth --> Ctrl : OK
+    Ctrl -> Svc : addTags(adrId, ["microservices"], userId)
+
+    Svc -> Svc : normalizeName("microservices")\n-> "microservices"
+
+    Svc -> TagRepo : findByName("microservices")
+    TagRepo -> CBTags : N1QL: SELECT ... WHERE name = $tagName
+
+    alt Tag does not exist
+        CBTags --> TagRepo : empty result
+        TagRepo --> Svc : null
+
+        Svc -> TagRepo : insert({ name: "microservices", usageCount: 1, ... })
+        TagRepo -> CBTags : collection.insert("tag::microservices", doc)
+        CBTags --> TagRepo : MutationResult
+        TagRepo --> Svc : Tag
+    else Tag exists
+        CBTags --> TagRepo : tag document
+        TagRepo --> Svc : Tag
+
+        Svc -> TagRepo : incrementUsageCount("microservices")
+        TagRepo -> CBTags : collection.mutateIn("tag::microservices",\n[increment("usageCount", 1)])
+        CBTags --> TagRepo : MutationResult
+    end
+
+    Svc -> AdrRepo : addTag(adrId, "microservices")
+    AdrRepo -> CBAdrs : collection.mutateIn("adr::adrId",\n[arrayAppend("tags", "microservices")])
+    CBAdrs --> AdrRepo : MutationResult
+
+    Svc -> Audit : record("tag_added", adrId,\n{ tag: "microservices" })
+    Audit -> CBTags : insert audit entry
+
+    Svc --> Ctrl : ["microservices", "event-sourcing", "cqrs"]
+    Ctrl --> User : 200 OK { adrId, tags: [...] }
+end
+
+@enduml

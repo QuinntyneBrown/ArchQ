@@ -1,0 +1,125 @@
+@startuml class_diagram
+title Class Diagram - ADR Search (Feature 09)
+
+package "Frontend" {
+    class SearchBar {
+        - query: string
+        - isOpen: boolean
+        - debounceMs: number = 300
+        + onInput(value: string): void
+        + onClear(): void
+        + onKeyboardShortcut(): void
+    }
+
+    class SearchResultsList {
+        - results: SearchResult[]
+        - isLoading: boolean
+        - totalHits: number
+        + onResultClick(adrId: string): void
+    }
+
+    class SearchClientService {
+        + search(tenantSlug, params): Promise
+    }
+
+    class SearchParams {
+        + query: string
+        + status: string
+        + pageSize: number
+        + offset: number
+    }
+}
+
+package "API - Controllers" {
+    class SearchController {
+        + search(tenantSlug: string, query: SearchQueryDto): SearchResponse
+    }
+}
+
+package "API - Services" {
+    class SearchService {
+        - ftsClient: CouchbaseFtsClient
+        + search(tenantSlug: string, params: SearchQueryDto): SearchResponse
+        - buildFtsRequest(tenantSlug, params): FtsSearchRequest
+        - extractSnippets(fragments): string
+        - mapToSearchResults(ftsRows): SearchResult[]
+    }
+
+    class CouchbaseFtsClient {
+        - cluster: CouchbaseCluster
+        + execute(indexName: string, request: FtsSearchRequest): FtsSearchResponse
+    }
+}
+
+package "Domain - DTOs" {
+    class SearchQueryDto {
+        + query: string
+        + status: string
+        + pageSize: number
+        + offset: number
+    }
+
+    class SearchResponse {
+        + results: SearchResult[]
+        + totalHits: number
+        + took: number
+    }
+
+    class SearchResult {
+        + id: string
+        + adrNumber: string
+        + title: string
+        + status: string
+        + score: number
+        + snippet: string
+    }
+}
+
+package "Couchbase FTS" {
+    class FtsSearchRequest {
+        + query: FtsQuery
+        + fields: string[]
+        + highlight: FtsHighlight
+        + size: number
+        + from_offset: number
+        + sort: string[]
+    }
+
+    class FtsQuery {
+        + conjunction: FtsClause[]
+    }
+
+    class FtsClause {
+        + match: string
+        + field: string
+        + analyzer: string
+        + fuzziness: number
+    }
+
+    class FtsHighlight {
+        + style: string
+        + fields: string[]
+    }
+
+    class FtsRow {
+        + id: string
+        + score: number
+        + fields: Map
+        + fragments: Map
+    }
+}
+
+SearchBar --> SearchClientService
+SearchBar --> SearchResultsList
+SearchClientService --> SearchController
+SearchController --> SearchService
+SearchService --> CouchbaseFtsClient
+SearchService ..> SearchQueryDto
+SearchService ..> SearchResponse
+SearchResponse --> SearchResult
+CouchbaseFtsClient ..> FtsSearchRequest
+FtsSearchRequest --> FtsQuery
+FtsQuery --> FtsClause
+FtsSearchRequest --> FtsHighlight
+
+@enduml

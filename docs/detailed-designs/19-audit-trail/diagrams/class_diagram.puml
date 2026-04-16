@@ -1,0 +1,98 @@
+@startuml class_diagram
+title Class Diagram — Audit Trail
+
+class AuditController {
+    -auditService: AuditService
+    +listAuditEntries(req, res): Promise<void>
+    +getAuditEntry(req, res): Promise<void>
+    +listAuditByResource(req, res): Promise<void>
+}
+
+class AuditService {
+    -auditRepository: AuditRepository
+    -auditEntryFactory: AuditEntryFactory
+    +record(action, resourceType, resourceId, actorId, details): Promise<AuditEntry>
+    +list(filters: AuditFilter, pagination: Pagination): Promise<PaginatedResult<AuditEntry>>
+    +listByResource(resourceType, resourceId, pagination): Promise<PaginatedResult<AuditEntry>>
+    +getById(auditId: string): Promise<AuditEntry | null>
+}
+
+class AuditRepository {
+    +insert(entry: AuditEntry): Promise<AuditEntry>
+    +findAll(filters: AuditFilter, pagination: Pagination): Promise<AuditEntry[]>
+    +findByResource(resourceType, resourceId, pagination): Promise<AuditEntry[]>
+    +findById(id: string): Promise<AuditEntry | null>
+    +count(filters: AuditFilter): Promise<number>
+    +upsert(): <<throws UnsupportedOperationError>>
+    +remove(): <<throws UnsupportedOperationError>>
+}
+
+class AuditEntryFactory {
+    +{static} create(action, resourceType, resourceId, actorId, details): AuditEntry
+}
+
+class AuditEntry <<Document>> {
+    +type: "audit_entry"
+    +resourceType: string
+    +resourceId: string
+    +action: string
+    +actorId: string
+    +timestamp: string
+    +details: Record<string, any>
+}
+
+class AuditFilter {
+    +action: string | null
+    +resourceType: string | null
+    +resourceId: string | null
+    +actorId: string | null
+    +startTime: string | null
+    +endTime: string | null
+}
+
+class Pagination {
+    +page: number
+    +limit: number
+}
+
+class PaginatedResult<T> {
+    +totalCount: number
+    +page: number
+    +limit: number
+    +entries: T[]
+}
+
+enum AuditAction {
+    content_updated
+    status_changed
+    approver_assigned
+    approver_removed
+    approval_recorded
+    artifact_added
+    artifact_modified
+    artifact_removed
+    comment_added
+    comment_edited
+    comment_deleted
+    tag_added
+    tag_removed
+    role_changed
+    tenant_created
+    tenant_updated
+}
+
+class TenantScopedRepository<T> {
+    #tenantContext: TenantContext
+    #collection: Collection
+}
+
+AuditController --> AuditService
+AuditService --> AuditRepository
+AuditService --> AuditEntryFactory
+AuditRepository --|> TenantScopedRepository
+AuditEntryFactory ..> AuditEntry : creates
+AuditService ..> AuditFilter : uses
+AuditService ..> PaginatedResult : returns
+AuditEntry ..> AuditAction : action type
+
+@enduml

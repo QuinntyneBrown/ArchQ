@@ -1,0 +1,93 @@
+@startuml class_diagram
+title Class Diagram — Approver Assignment (Feature 11)
+
+class AdrDocument {
+    +id: string
+    +type: string = "adr"
+    +tenantId: string
+    +number: int
+    +title: string
+    +status: AdrStatus
+    +authorId: string
+    +approvers: ApproverEntry[]
+    +body: string
+    +version: int
+    +createdAt: DateTime
+    +updatedAt: DateTime
+}
+
+class ApproverEntry {
+    +userId: string
+    +status: ApproverStatus
+    +comment: string?
+    +decidedAt: DateTime?
+}
+
+enum ApproverStatus {
+    pending
+    approved
+    rejected
+    cleared
+}
+
+class UserDocument {
+    +id: string
+    +type: string = "user"
+    +email: string
+    +displayName: string
+    +roles: string[]
+    +emailNotificationsEnabled: boolean
+}
+
+class TransitionRequest {
+    +targetStatus: AdrStatus
+    +approverIds: string[]
+}
+
+class ValidationResult {
+    +valid: boolean
+    +errors: ValidationError[]
+}
+
+class ValidationError {
+    +field: string
+    +rule: string
+    +message: string
+}
+
+class ApproverAssignmentValidator {
+    -userRepo: UserRepository
+    +validate(authorId: string, approverIds: string[], tenantSlug: string): ValidationResult
+    -checkSelfAssignment(authorId: string, approverIds: string[]): ValidationError?
+    -checkReviewerRole(users: UserDocument[], approverIds: string[]): ValidationError[]
+    -checkDuplicates(approverIds: string[]): ValidationError?
+}
+
+class WorkflowService {
+    -adrRepo: AdrRepository
+    -validator: ApproverAssignmentValidator
+    +transitionAdr(adrId: string, request: TransitionRequest, userId: string): AdrDocument
+    -buildApproverEntries(approverIds: string[]): ApproverEntry[]
+}
+
+class UserRepository {
+    -tenantContext: TenantContext
+    +findByIds(ids: string[]): UserDocument[]
+    +findByRole(role: string): UserDocument[]
+}
+
+class AdrRepository {
+    -tenantContext: TenantContext
+    +findById(id: string): AdrDocument
+    +save(adr: AdrDocument, cas: long): AdrDocument
+}
+
+AdrDocument *-- "1..*" ApproverEntry
+ApproverEntry --> ApproverStatus
+WorkflowService --> ApproverAssignmentValidator
+WorkflowService --> AdrRepository
+ApproverAssignmentValidator --> UserRepository
+ApproverAssignmentValidator --> ValidationResult
+ValidationResult *-- "0..*" ValidationError
+
+@enduml

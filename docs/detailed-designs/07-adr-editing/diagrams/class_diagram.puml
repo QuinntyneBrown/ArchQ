@@ -1,0 +1,130 @@
+@startuml class_diagram
+title Class Diagram - ADR Editing (Feature 07)
+
+package "Frontend" {
+    class AdrEditorPage {
+        - adrId: string
+        - title: string
+        - body: string
+        - originalBody: string
+        - status: AdrStatus
+        - version: number
+        - isDirty: boolean
+        - isReadOnly: boolean
+        + loadAdr(adrId: string): void
+        + onSave(): void
+        + onDiscard(): void
+        + checkEditPermission(): boolean
+    }
+
+    class AdrReadOnlyView {
+        - renderedHtml: string
+        + render(adr: AdrDocument): void
+    }
+
+    class AdrClientService {
+        + getAdr(tenantSlug, adrId): Promise
+        + updateAdr(tenantSlug, adrId, dto): Promise
+    }
+}
+
+package "API - Controllers" {
+    class AdrController {
+        + getById(tenantSlug: string, adrId: string): AdrResponse
+        + update(tenantSlug: string, adrId: string, dto: UpdateAdrDto): AdrResponse
+    }
+}
+
+package "API - Services" {
+    class AdrService {
+        - adrRepository: AdrRepository
+        - versionService: AdrVersionService
+        - notificationService: NotificationService
+        - auditService: AuditService
+        + getAdr(tenantSlug: string, adrId: string): AdrDocument
+        + updateAdr(tenantSlug: string, userId: string, adrId: string, dto: UpdateAdrDto): AdrDocument
+        - assertEditable(adr: AdrDocument, userId: string, userRoles: string[]): void
+    }
+
+    class AdrVersionService {
+        - versionRepository: AdrVersionRepository
+        + archiveCurrentVersion(tenantSlug: string, adr: AdrDocument): AdrVersionDocument
+    }
+
+    class NotificationService {
+        + notifyApproversOfEdit(tenantSlug: string, adr: AdrDocument): void
+    }
+
+    class AuditService {
+        + record(tenantSlug: string, event: AuditEvent): void
+    }
+}
+
+package "API - Repositories" {
+    class AdrRepository {
+        + findById(tenantSlug: string, adrId: string): AdrDocument
+        + update(tenantSlug: string, adrId: string, doc: AdrDocument): AdrDocument
+    }
+
+    class AdrVersionRepository {
+        + insert(tenantSlug: string, doc: AdrVersionDocument): AdrVersionDocument
+    }
+}
+
+package "Domain - Documents" {
+    class AdrDocument {
+        + id: string
+        + type: string
+        + adrNumber: string
+        + title: string
+        + body: string
+        + status: AdrStatus
+        + authorId: string
+        + tags: string[]
+        + version: number
+        + createdAt: string
+        + updatedAt: string
+    }
+
+    class AdrVersionDocument {
+        + id: string
+        + type: "adr_version"
+        + adrId: string
+        + version: number
+        + title: string
+        + body: string
+        + editedBy: string
+        + createdAt: string
+    }
+
+    class UpdateAdrDto {
+        + title: string
+        + body: string
+        + tags: string[]
+    }
+
+    enum AdrStatus {
+        DRAFT
+        IN_REVIEW
+        APPROVED
+        REJECTED
+        SUPERSEDED
+        DEPRECATED
+    }
+}
+
+AdrEditorPage --> AdrReadOnlyView
+AdrEditorPage --> AdrClientService
+AdrClientService --> AdrController
+AdrController --> AdrService
+AdrService --> AdrVersionService
+AdrService --> NotificationService
+AdrService --> AuditService
+AdrService --> AdrRepository
+AdrVersionService --> AdrVersionRepository
+AdrDocument --> AdrStatus
+AdrService ..> UpdateAdrDto
+AdrService ..> AdrDocument
+AdrVersionService ..> AdrVersionDocument
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml sequence_auto_approve
+title Sequence — Auto-Approve ADR (Approval Threshold Met)
+
+actor Approver
+participant "ApprovalController" as ctrl
+participant "TenantContext" as tenant
+participant "ApprovalService" as appSvc
+participant "AdrRepository" as adrRepo
+participant "ConfigRepository" as configRepo
+participant "WorkflowService" as wfSvc
+participant "WorkflowStateMachine" as sm
+participant "AuditRepository" as auditRepo
+participant "NotificationService" as notifSvc
+database "Couchbase\n{tenant}.adrs" as cb_adrs
+database "Couchbase\n{tenant}.config" as cb_config
+database "Couchbase\n{tenant}.audit" as cb_audit
+
+Approver -> ctrl : POST /api/adrs/{id}/decisions\n{ decision: "approved", comment: "LGTM" }
+ctrl -> tenant : getTenantSlug()
+tenant --> ctrl : "acme-corp"
+ctrl -> appSvc : recordDecision(adrId, userId, decision)
+
+appSvc -> adrRepo : findById(adrId)
+adrRepo -> cb_adrs : KV GET adrId
+cb_adrs --> adrRepo : AdrDocument (status=InReview, cas=789)
+adrRepo --> appSvc : AdrDocument
+
+appSvc -> appSvc : Validate approver is assigned\nand has not already decided
+appSvc -> appSvc : Set approver entry:\nstatus="approved",\ncomment="LGTM",\ndecidedAt=now()
+
+appSvc -> configRepo : getApprovalThreshold()
+configRepo -> cb_config : N1QL SELECT approvalThreshold
+cb_config --> configRepo : { approvalThreshold: 2 }
+configRepo --> appSvc : 2
+
+appSvc -> appSvc : Count approved: 2\nThreshold: 2\n2 >= 2 => threshold met!
+
+appSvc -> wfSvc : transition(adr, Approved)
+wfSvc -> sm : validate(adr, Approved)
+sm --> wfSvc : ValidationResult(valid=true)
+wfSvc -> wfSvc : adr.status = Approved
+wfSvc -> adrRepo : save(adr, cas=789)
+adrRepo -> cb_adrs : KV REPLACE adrId (CAS=789)
+cb_adrs --> adrRepo : success (cas=890)
+adrRepo --> wfSvc : updated AdrDocument
+
+wfSvc -> auditRepo : append(auditEntry)
+auditRepo -> cb_audit : KV INSERT audit-uuid
+cb_audit --> auditRepo : success
+
+wfSvc -> notifSvc : notifyTransition(adr, InReview, Approved)
+notifSvc -> notifSvc : Notify author:\n"ADR-005 has been approved"
+notifSvc --> wfSvc : done
+
+wfSvc --> appSvc : updated AdrDocument
+appSvc --> ctrl : updated AdrDocument
+ctrl --> Approver : 200 OK { id, status: "Approved", approvers: [...] }
+
+@enduml

@@ -1,0 +1,7 @@
+services:
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Jwt__Secret=dev-secret-key-at-least-32-characters-long
+      - Jwt__Issuer=archq-dev
+      - Jwt__Audience=archq-dev

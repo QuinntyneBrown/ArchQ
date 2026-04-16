@@ -1,0 +1,53 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram — ADR Creation (Feature 06)
+
+Person(author, "Author / Admin", "Creates new ADRs using the Markdown editor")
+
+Container_Boundary(spa, "Frontend SPA") {
+    Component(adrEditorPage, "AdrEditorPage", "React Component", "Orchestrates the ADR creation screen: title input, toolbar, split-pane editor, action bar")
+    Component(markdownEditor, "MarkdownEditor", "React Component", "CodeMirror-based Markdown edit pane with Geist Mono font and formatting toolbar")
+    Component(markdownPreview, "MarkdownPreview", "React Component", "Renders Markdown to sanitised HTML with syntax-highlighted code blocks")
+    Component(templateService, "TemplateClientService", "TypeScript Service", "Fetches tenant template or system default for pre-population")
+    Component(adrClientService, "AdrClientService", "TypeScript Service", "HTTP client for ADR CRUD operations")
+}
+
+Container_Boundary(api, "API Server") {
+    Component(adrController, "AdrController", "NestJS Controller", "POST /api/tenants/:tenantSlug/adrs — validates and creates ADR")
+    Component(adrService, "AdrService", "NestJS Service", "Business logic: sequential numbering, template validation, initial status assignment")
+    Component(templateController, "TemplateController", "NestJS Controller", "GET/PUT /api/tenants/:tenantSlug/config/template")
+    Component(templateServiceBE, "TemplateService", "NestJS Service", "Manages tenant template CRUD and section validation")
+    Component(adrRepository, "AdrRepository", "Repository", "Couchbase CRUD for adrs collection, scoped to tenant")
+    Component(configRepository, "ConfigRepository", "Repository", "Couchbase CRUD for config collection (templates)")
+    Component(sequenceGenerator, "AdrSequenceGenerator", "Service", "Generates next sequential ADR number within tenant scope")
+    Component(auditService, "AuditService", "Service", "Records adr.created event to audit collection")
+    Component(tenantContext, "TenantContext", "Middleware", "Extracts tenant slug from JWT, sets request scope")
+}
+
+ContainerDb(couchbase, "Couchbase", "archq bucket", "Scopes per tenant; collections: adrs, config, audit")
+
+author --> adrEditorPage : "Writes ADR content"
+adrEditorPage --> markdownEditor
+adrEditorPage --> markdownPreview
+adrEditorPage --> templateService
+adrEditorPage --> adrClientService
+
+adrClientService --> adrController : "POST /api/tenants/:slug/adrs"
+templateService --> templateController : "GET /api/tenants/:slug/config/template"
+
+adrController --> tenantContext
+adrController --> adrService
+adrService --> sequenceGenerator
+adrService --> adrRepository
+adrService --> auditService
+
+templateController --> tenantContext
+templateController --> templateServiceBE
+templateServiceBE --> configRepository
+
+adrRepository --> couchbase
+configRepository --> couchbase
+auditService --> couchbase
+
+@enduml

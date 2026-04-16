@@ -1,0 +1,88 @@
+@startuml sequence_register
+title Sequence Diagram — User Registration
+
+actor "User" as Client
+participant "AuthController" as Ctrl
+participant "RegistrationService" as Reg
+participant "GlobalUserRepository" as GRepo
+participant "PasswordHasher" as Hash
+participant "TenantService" as TSvc
+participant "UserRepository" as URepo
+participant "EmailVerificationService" as Verify
+participant "AuditService" as Audit
+database "Couchbase\n_system.global_users" as GDB
+database "Couchbase\n{tenant}.users" as TDB
+participant "Email Service" as Email
+
+Client -> Ctrl : POST /api/auth/register\n{ fullName, email, password, orgName }
+activate Ctrl
+
+Ctrl -> Ctrl : Validate input fields\n(name, email format, password strength)
+
+Ctrl -> Reg : register(dto)
+activate Reg
+
+Reg -> GRepo : findByEmail("jane@example.com")
+activate GRepo
+GRepo -> GDB : GET guser::{email-hash}
+GDB --> GRepo : null (not found)
+GRepo --> Reg : null
+deactivate GRepo
+
+alt Email already exists
+    Reg --> Ctrl : RegistrationResult { success: true }
+    note right: Return same 201 to prevent\nemail enumeration
+    Ctrl --> Client : 201 Created\n"Check your email"
+end
+
+Reg -> Hash : hash("S3cur3P@ss!")
+activate Hash
+Hash --> Reg : "$2b$12$..."
+deactivate Hash
+
+alt New organization (no invite token)
+    Reg -> TSvc : createTenant({ displayName: "Acme Corp" })
+    activate TSvc
+    TSvc --> Reg : Tenant { slug: "acme-corp", id: "..." }
+    deactivate TSvc
+    note right: User gets Admin role\nfor new org
+else Join via invite
+    Reg -> Reg : inviteService.validateInvite(token)
+    note right: User gets roles\nspecified in invite
+end
+
+Reg -> URepo : create(userDoc)
+activate URepo
+URepo -> TDB : UPSERT user::{uuid}\nINTO acme-corp.users
+TDB --> URepo : MutationResult
+URepo --> Reg : OK
+deactivate URepo
+
+Reg -> GRepo : create(globalUserDoc)
+activate GRepo
+GRepo -> GDB : UPSERT guser::{email-hash}\n{ email, memberships: [...] }
+GDB --> GRepo : OK
+GRepo --> Reg : OK
+deactivate GRepo
+
+Reg -> Verify : generateToken(userId, "acme-corp")
+activate Verify
+Verify -> Verify : Generate 32-byte random token\nStore SHA-256 hash
+Verify -> GDB : UPSERT vtoken::{tokenHash}
+Verify -> Email : Send verification email\nwith raw token in link
+Email --> Verify : OK
+Verify --> Reg : rawToken
+deactivate Verify
+
+Reg -> Audit : record({ action: "USER_REGISTERED" })
+activate Audit
+Audit --> Reg : OK
+deactivate Audit
+
+Reg --> Ctrl : RegistrationResult { success: true }
+deactivate Reg
+
+Ctrl --> Client : 201 Created\n{ message: "Check your email to verify" }
+deactivate Ctrl
+
+@enduml

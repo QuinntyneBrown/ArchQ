@@ -1,0 +1,27 @@
+@startuml sequence_record_audit
+title Sequence Diagram — Record Audit Entry
+
+participant "AdrService\n(or any service)" as Caller
+participant "AuditService" as Svc
+participant "AuditEntryFactory" as Factory
+participant "AuditRepository" as Repo
+database "Couchbase\n(audit collection)" as CB
+
+note over Caller : After completing a significant\naction (e.g., status change)
+
+Caller -> Svc : record("status_changed", "adr",\nadrId, actorId,\n{ previousStatus: "draft",\n  newStatus: "in_review" })
+
+Svc -> Factory : create("status_changed", "adr",\nadrId, actorId, details)
+Factory -> Factory : Generate UUID\nCapture ISO 8601 timestamp
+Factory --> Svc : AuditEntry {\n  type: "audit_entry",\n  action: "status_changed",\n  resourceType: "adr",\n  resourceId: adrId,\n  actorId: actorId,\n  timestamp: "2026-04-15T10:30:00Z",\n  details: { previousStatus, newStatus }\n}
+
+Svc -> Repo : insert(auditEntry)
+Repo -> CB : collection.insert(\n  "audit::2026-04-15T10:30:00Z::uuid",\n  auditEntry)
+CB --> Repo : MutationResult
+Repo --> Svc : AuditEntry
+
+note over CB : Entry is now immutable.\nNo UPDATE or DELETE\npermissions on this collection.
+
+Svc --> Caller : AuditEntry (confirmation)
+
+@enduml

@@ -1,0 +1,93 @@
+@startuml class_diagram
+title Class Diagram — Document Attachments
+
+class AttachmentController {
+    -attachmentService: AttachmentService
+    +upload(req, res): Promise<void>
+    +listAttachments(req, res): Promise<void>
+    +getAttachment(req, res): Promise<void>
+    +downloadAttachment(req, res): Promise<void>
+    +updateAttachment(req, res): Promise<void>
+    +deleteAttachment(req, res): Promise<void>
+}
+
+class AttachmentService {
+    -attachmentRepository: AttachmentRepository
+    -fileValidator: FileValidator
+    -objectStorageClient: ObjectStorageClient
+    -auditService: AuditService
+    +upload(adrId, file, displayName, description, userId): Promise<AttachmentMeta>
+    +listByAdr(adrId): Promise<AttachmentMeta[]>
+    +download(attachmentId): Promise<string>
+    +update(attachmentId, displayName, description): Promise<AttachmentMeta>
+    +delete(attachmentId, userId): Promise<void>
+    -generateStorageKey(tenantSlug, adrId, attachId, fileName): string
+}
+
+class FileValidator {
+    -ALLOWED_EXTENSIONS: string[]
+    -ALLOWED_MIME_TYPES: string[]
+    -MAX_FILE_SIZE: number
+    -BLOCKED_EXTENSIONS: string[]
+    +validate(file: UploadedFile): ValidationResult
+    -checkExtension(fileName: string): boolean
+    -checkMimeType(buffer: Buffer): string
+    -checkFileSize(size: number): boolean
+    -sanitizeFileName(name: string): string
+}
+
+class ObjectStorageClient {
+    -s3Client: S3Client
+    -bucketName: string
+    +putObject(key, stream, contentType): Promise<void>
+    +getObject(key): Promise<ReadableStream>
+    +getSignedUrl(key, expiresInSec): Promise<string>
+    +deleteObject(key): Promise<void>
+}
+
+class AttachmentRepository {
+    +insert(meta: AttachmentMeta): Promise<AttachmentMeta>
+    +findById(id: string): Promise<AttachmentMeta | null>
+    +findByAdrId(adrId: string): Promise<AttachmentMeta[]>
+    +upsert(id: string, meta: AttachmentMeta): Promise<void>
+    +softDelete(id: string): Promise<void>
+}
+
+class AttachmentMeta <<Document>> {
+    +type: "attachment_meta"
+    +adrId: string
+    +displayName: string
+    +description: string
+    +fileName: string
+    +fileExtension: string
+    +mimeType: string
+    +fileSizeBytes: number
+    +storageKey: string
+    +uploadedBy: string
+    +uploadedAt: string
+    +updatedAt: string
+    +deleted: boolean
+}
+
+class ValidationResult {
+    +valid: boolean
+    +errorCode: string | null
+    +errorMessage: string | null
+    +sanitizedFileName: string
+    +detectedMimeType: string
+}
+
+class TenantScopedRepository<T> {
+    #tenantContext: TenantContext
+    #collection: Collection
+}
+
+AttachmentController --> AttachmentService
+AttachmentService --> AttachmentRepository
+AttachmentService --> FileValidator
+AttachmentService --> ObjectStorageClient
+AttachmentRepository --|> TenantScopedRepository
+FileValidator ..> ValidationResult : returns
+AttachmentService ..> AttachmentMeta : creates/updates
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — Tenant Provisioning (API Service)
+
+Container_Boundary(api, "API Service") {
+    Component(ctrl, "TenantController", "Express Router", "Handles HTTP requests for tenant CRUD")
+    Component(svc, "TenantService", "Service", "Orchestrates tenant creation, validation, provisioning")
+    Component(repo, "TenantRepository", "Repository", "Persists tenant metadata to _system.tenants")
+    Component(prov, "CouchbaseProvisioner", "Infrastructure", "Creates scopes, collections, and indexes")
+    Component(slug, "SlugGenerator", "Utility", "Generates and validates URL-safe slugs")
+    Component(mw, "TenantContextMiddleware", "Middleware", "Extracts tenant from JWT, populates TenantContext")
+    Component(base, "TenantScopedRepository<T>", "Base Repository", "Enforces tenant-scoped data access for all queries")
+    Component(audit, "AuditService", "Service", "Records audit trail entries for provisioning events")
+}
+
+ContainerDb(cb, "Couchbase Cluster", "Couchbase 7+", "archq bucket with per-tenant scopes")
+
+Rel(ctrl, svc, "Invokes")
+Rel(svc, slug, "Validates slug")
+Rel(svc, repo, "Persists metadata")
+Rel(svc, prov, "Provisions scope")
+Rel(svc, audit, "Writes audit entry")
+Rel(repo, cb, "N1QL / KV ops", "_system.tenants")
+Rel(prov, cb, "Scope/collection management", "Management API")
+Rel(base, cb, "Scoped queries", "{tenant_slug}.{collection}")
+Rel(mw, base, "Provides TenantContext")
+
+SHOW_LEGEND()
+@enduml

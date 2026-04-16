@@ -1,0 +1,133 @@
+@startuml class_diagram
+title Class Diagram — ADR Workflow (Feature 10)
+
+enum AdrStatus {
+    Draft
+    InReview
+    Approved
+    Rejected
+    Superseded
+    Deprecated
+}
+
+class AdrDocument {
+    +id: string
+    +type: string = "adr"
+    +tenantId: string
+    +number: int
+    +title: string
+    +status: AdrStatus
+    +authorId: string
+    +approvers: ApproverEntry[]
+    +supersededBy: string?
+    +body: string
+    +version: int
+    +tags: string[]
+    +createdAt: DateTime
+    +updatedAt: DateTime
+}
+
+class ApproverEntry {
+    +userId: string
+    +status: "pending" | "approved" | "rejected"
+    +comment: string?
+    +decidedAt: DateTime?
+}
+
+class TransitionRequest {
+    +targetStatus: AdrStatus
+    +approverIds: string[]?
+    +supersededBy: string?
+    +reason: string?
+}
+
+class ValidationResult {
+    +valid: boolean
+    +errors: ValidationError[]
+}
+
+class ValidationError {
+    +field: string
+    +rule: string
+    +message: string
+}
+
+class WorkflowStateMachine {
+    -permittedTransitions: Map<AdrStatus, AdrStatus[]>
+    +canTransition(current: AdrStatus, target: AdrStatus): boolean
+    +validate(adr: AdrDocument, request: TransitionRequest): ValidationResult
+}
+
+class WorkflowService {
+    -adrRepo: AdrRepository
+    -auditRepo: AuditRepository
+    -configRepo: ConfigRepository
+    -notificationService: NotificationService
+    -stateMachine: WorkflowStateMachine
+    +transitionAdr(adrId: string, request: TransitionRequest, userId: string): AdrDocument
+}
+
+class WorkflowController {
+    -workflowService: WorkflowService
+    -tenantContext: TenantContext
+    +postTransition(adrId: string, body: TransitionRequest): Response
+}
+
+class AuditEntry {
+    +id: string
+    +type: string = "audit_entry"
+    +entityType: string
+    +entityId: string
+    +action: string
+    +detail: object
+    +performedBy: string
+    +timestamp: DateTime
+}
+
+class NotificationDocument {
+    +id: string
+    +type: string = "notification"
+    +recipientId: string
+    +title: string
+    +body: string
+    +link: string
+    +read: boolean
+    +createdAt: DateTime
+}
+
+class NotificationService {
+    -notifRepo: NotificationRepository
+    -emailGateway: EmailGateway
+    -userRepo: UserRepository
+    +notifyTransition(adr: AdrDocument, from: AdrStatus, to: AdrStatus): void
+}
+
+class AdrRepository {
+    -tenantContext: TenantContext
+    +findById(id: string): AdrDocument
+    +save(adr: AdrDocument, cas: long): AdrDocument
+}
+
+class AuditRepository {
+    -tenantContext: TenantContext
+    +append(entry: AuditEntry): void
+}
+
+class ConfigRepository {
+    -tenantContext: TenantContext
+    +getApprovalThreshold(): int
+}
+
+AdrDocument *-- "0..*" ApproverEntry
+AdrDocument --> AdrStatus
+WorkflowController --> WorkflowService
+WorkflowService --> WorkflowStateMachine
+WorkflowService --> AdrRepository
+WorkflowService --> AuditRepository
+WorkflowService --> ConfigRepository
+WorkflowService --> NotificationService
+WorkflowStateMachine --> ValidationResult
+ValidationResult *-- "0..*" ValidationError
+NotificationService ..> NotificationDocument : creates
+
+@enduml

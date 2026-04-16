@@ -1,0 +1,38 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram — ADR Workflow (Feature 10)
+
+Container_Boundary(api, "ArchQ API") {
+    Component(ctrl, "WorkflowController", "REST Controller", "Exposes POST /api/adrs/{id}/transitions endpoint")
+    Component(svc, "WorkflowService", "Service", "Orchestrates validation, transition, audit, and notification")
+    Component(sm, "WorkflowStateMachine", "Domain Logic", "Encodes permitted transitions and precondition rules")
+    Component(notifSvc, "NotificationService", "Service", "Dispatches in-app and email notifications")
+    Component(adrRepo, "AdrRepository", "Repository", "CRUD for ADR documents in tenant-scoped adrs collection")
+    Component(auditRepo, "AuditRepository", "Repository", "Appends entries to tenant-scoped audit collection")
+    Component(notifRepo, "NotificationRepository", "Repository", "Persists in-app notification documents")
+    Component(configRepo, "ConfigRepository", "Repository", "Reads tenant configuration (approval threshold)")
+    Component(tenantCtx, "TenantContext", "Middleware", "Extracts tenant slug from JWT claims")
+}
+
+Container_Boundary(ext, "External Services") {
+    Component(emailGw, "EmailGateway", "Infrastructure", "Sends transactional emails via SMTP/SES")
+}
+
+ContainerDb(cb, "Couchbase", "archq bucket", "Scopes: {tenant_slug}. Collections: adrs, audit, config, notifications")
+
+Rel(ctrl, svc, "Delegates transition request")
+Rel(svc, sm, "Validates transition")
+Rel(svc, adrRepo, "Loads / updates ADR")
+Rel(svc, auditRepo, "Writes audit entry")
+Rel(svc, notifSvc, "Dispatches notifications")
+Rel(svc, configRepo, "Reads approval threshold")
+Rel(notifSvc, notifRepo, "Persists in-app notification")
+Rel(notifSvc, emailGw, "Sends email notification")
+Rel(adrRepo, cb, "N1QL / KV ops")
+Rel(auditRepo, cb, "N1QL / KV ops")
+Rel(configRepo, cb, "N1QL query")
+Rel(notifRepo, cb, "KV insert")
+Rel(ctrl, tenantCtx, "Reads tenant scope")
+
+@enduml

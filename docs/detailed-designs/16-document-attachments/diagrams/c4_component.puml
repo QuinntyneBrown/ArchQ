@@ -1,0 +1,30 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — Document Attachments
+
+Person(user, "Author / Admin", "Uploads and manages attachments on ADRs")
+
+System_Boundary(api, "ArchQ API Service") {
+    Component(ctrl, "AttachmentController", "Express Router", "Handles multipart upload and metadata endpoints")
+    Component(svc, "AttachmentService", "Service", "Orchestrates upload validation, storage, and metadata persistence")
+    Component(validator, "FileValidator", "Utility", "Validates file type (magic bytes), size, and name")
+    Component(repo, "AttachmentRepository", "TenantScopedRepository", "Persists attachment metadata in attachments_meta collection")
+    Component(storage, "ObjectStorageClient", "Client", "Uploads/downloads files to/from S3-compatible storage")
+    Component(auditSvc, "AuditService", "Service", "Records immutable audit entries")
+}
+
+ContainerDb(cb, "Couchbase", "attachments_meta collection", "Stores attachment metadata per tenant scope")
+System_Ext(s3, "Object Storage", "S3-compatible storage for file content")
+
+Rel(user, ctrl, "POST/GET/DELETE attachments", "HTTPS / multipart")
+Rel(ctrl, svc, "Delegates business logic")
+Rel(svc, validator, "Validates file type, size, name")
+Rel(svc, repo, "Reads/writes attachment metadata")
+Rel(svc, storage, "Uploads/downloads file content")
+Rel(svc, auditSvc, "Records audit entries")
+Rel(repo, cb, "N1QL queries / KV ops", "Couchbase SDK")
+Rel(storage, s3, "PUT/GET/DELETE objects", "S3 API")
+
+SHOW_LEGEND()
+@enduml

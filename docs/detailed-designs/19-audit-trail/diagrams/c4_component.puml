@@ -1,0 +1,35 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — Audit Trail
+
+Person(admin, "Admin", "Views audit trail entries")
+
+System_Boundary(api, "ArchQ API Service") {
+    Component(ctrl, "AuditController", "Express Router", "Handles read-only HTTP requests for audit entries")
+    Component(svc, "AuditService", "Service", "Central service called by all other services to record audit entries")
+    Component(factory, "AuditEntryFactory", "Factory", "Creates well-structured audit entry documents")
+    Component(repo, "AuditRepository", "TenantScopedRepository", "Insert-only repository for audit collection")
+
+    Component(adrSvc, "AdrService", "Service", "Records content_updated, status_changed")
+    Component(approvalSvc, "ApprovalService", "Service", "Records approval_recorded")
+    Component(attachSvc, "AttachmentService", "Service", "Records artifact_added/modified/removed")
+    Component(commentSvc, "CommentService", "Service", "Records comment_added/edited/deleted")
+    Component(tagSvc, "TagService", "Service", "Records tag_added/removed")
+}
+
+ContainerDb(cb, "Couchbase", "audit collection", "Immutable, append-only audit log per tenant scope")
+
+Rel(admin, ctrl, "GET audit entries", "HTTPS / JSON")
+Rel(ctrl, svc, "Queries audit entries")
+Rel(adrSvc, svc, "record()")
+Rel(approvalSvc, svc, "record()")
+Rel(attachSvc, svc, "record()")
+Rel(commentSvc, svc, "record()")
+Rel(tagSvc, svc, "record()")
+Rel(svc, factory, "Creates entry documents")
+Rel(svc, repo, "Inserts audit entries")
+Rel(repo, cb, "INSERT only / N1QL queries", "Couchbase SDK")
+
+SHOW_LEGEND()
+@enduml

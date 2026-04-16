@@ -1,0 +1,61 @@
+@startuml sequence_submit_review
+title Sequence — Submit ADR for Review (Draft -> InReview)
+
+actor Author
+participant "WorkflowController" as ctrl
+participant "TenantContext" as tenant
+participant "WorkflowService" as svc
+participant "WorkflowStateMachine" as sm
+participant "AdrRepository" as adrRepo
+participant "AuditRepository" as auditRepo
+participant "NotificationService" as notifSvc
+participant "NotificationRepository" as notifRepo
+participant "EmailGateway" as email
+database "Couchbase\n{tenant}.adrs" as cb_adrs
+database "Couchbase\n{tenant}.audit" as cb_audit
+
+Author -> ctrl : POST /api/adrs/{id}/transitions\n{ targetStatus: "InReview",\n  approverIds: ["uuid1","uuid2"] }
+ctrl -> tenant : getTenantSlug()
+tenant --> ctrl : "acme-corp"
+ctrl -> svc : transitionAdr(adrId, request, userId)
+
+svc -> adrRepo : findById(adrId)
+adrRepo -> cb_adrs : KV GET adrId
+cb_adrs --> adrRepo : AdrDocument (status=Draft, cas=123)
+adrRepo --> svc : AdrDocument
+
+svc -> sm : validate(adr, request)
+note right of sm
+  Checks:
+  1. Draft -> InReview is permitted
+  2. approverIds.length >= 1
+  3. No self-assignment
+  4. All approvers have Reviewer role
+end note
+sm --> svc : ValidationResult(valid=true)
+
+svc -> svc : adr.status = InReview\nadr.approvers = [{userId, status:"pending"}, ...]
+svc -> adrRepo : save(adr, cas=123)
+adrRepo -> cb_adrs : KV REPLACE adrId (CAS=123)
+cb_adrs --> adrRepo : success (cas=456)
+adrRepo --> svc : updated AdrDocument
+
+svc -> auditRepo : append(auditEntry)
+auditRepo -> cb_audit : KV INSERT audit-uuid
+cb_audit --> auditRepo : success
+
+svc -> notifSvc : notifyTransition(adr, Draft, InReview)
+loop for each approver
+    notifSvc -> notifRepo : save(notification)
+    notifRepo --> notifSvc : saved
+    alt email enabled for approver
+        notifSvc -> email : sendEmail(approver.email, subject, body)
+        email --> notifSvc : sent
+    end
+end
+notifSvc --> svc : done
+
+svc --> ctrl : updated AdrDocument
+ctrl --> Author : 200 OK { id, status: "InReview", approvers: [...] }
+
+@enduml

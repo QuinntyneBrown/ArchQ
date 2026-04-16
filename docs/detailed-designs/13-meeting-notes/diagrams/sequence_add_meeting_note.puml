@@ -1,0 +1,70 @@
+@startuml sequence_add_meeting_note
+title Sequence — Add Meeting Note to ADR
+
+actor Author
+participant "MeetingNoteController" as ctrl
+participant "TenantContext" as tenant
+participant "MeetingNoteService" as svc
+participant "AdrRepository" as adrRepo
+participant "MeetingNoteRepository" as mnRepo
+participant "AuditRepository" as auditRepo
+database "Couchbase\n{tenant}.adrs" as cb_adrs
+database "Couchbase\n{tenant}.meeting_notes" as cb_mn
+database "Couchbase\n{tenant}.audit" as cb_audit
+
+Author -> ctrl : POST /api/adrs/{adrId}/meeting-notes\n{ title: "Architecture Review",\n  meetingDate: "2026-04-10",\n  attendees: ["Alice","Bob"],\n  body: "## Agenda\n..." }
+ctrl -> tenant : getTenantSlug()
+tenant --> ctrl : "acme-corp"
+ctrl -> svc : createMeetingNote(adrId, request, userId)
+
+== Validate ADR Status ==
+svc -> adrRepo : findById(adrId)
+adrRepo -> cb_adrs : KV GET adrId
+cb_adrs --> adrRepo : AdrDocument (status=Draft)
+adrRepo --> svc : AdrDocument
+
+svc -> svc : validateAdrStatus(adr)
+note right: status=Draft -> Allowed\n(Draft and InReview are permitted)
+
+== Validate Request Fields ==
+svc -> svc : validateRequest(request)
+note right
+  Checks:
+  - title is non-empty, <= 200 chars
+  - meetingDate is valid ISO date
+  - attendees is non-empty array
+  - body is non-empty, <= 50000 chars
+end note
+
+== Persist Meeting Note ==
+svc -> svc : Generate UUID\nBuild MeetingNoteDocument
+svc -> mnRepo : insert(meetingNote)
+mnRepo -> cb_mn : KV INSERT meeting-note-uuid
+cb_mn --> mnRepo : success
+mnRepo --> svc : MeetingNoteDocument
+
+== Audit ==
+svc -> auditRepo : append({entityType:"meeting_note",\nentityId:"meeting-note-uuid",\naction:"created",\nperformedBy:userId})
+auditRepo -> cb_audit : KV INSERT audit-uuid
+cb_audit --> auditRepo : success
+
+svc --> ctrl : MeetingNoteDocument
+ctrl --> Author : 201 Created\n{ id, title, meetingDate, attendees, body, ... }
+
+== Error Scenario: Finalized ADR ==
+
+Author -> ctrl : POST /api/adrs/{adrId}/meeting-notes\n{ ... }
+ctrl -> svc : createMeetingNote(adrId, request, userId)
+
+svc -> adrRepo : findById(adrId)
+adrRepo -> cb_adrs : KV GET adrId
+cb_adrs --> adrRepo : AdrDocument (status=Approved)
+adrRepo --> svc : AdrDocument
+
+svc -> svc : validateAdrStatus(adr)
+note right #Pink: status=Approved -> REJECTED\nNot in [Draft, InReview]
+
+svc --> ctrl : throw ValidationException("ADR_FINALIZED")
+ctrl --> Author : 422 Unprocessable Entity\n{ error: "ADR_FINALIZED",\n  message: "Cannot add artifacts\n  to a finalized ADR." }
+
+@enduml

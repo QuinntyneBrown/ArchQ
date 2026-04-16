@@ -1,0 +1,60 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.nupkg
+*.snupkg
+
+## Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Angular
+dist/
+.angular/
+.sass-cache/
+.connect.lock
+coverage/
+libpeerconnection.log
+testem.log
+typings/
+
+## Playwright
+test-results/
+playwright-report/
+blob-report/
+
+## IDE
+.idea/
+*.swp
+*.swo
+*~
+.vs/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Environment
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+
+## Docker
+couchbase-data/

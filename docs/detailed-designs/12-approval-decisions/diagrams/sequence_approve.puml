@@ -1,0 +1,62 @@
+@startuml sequence_approve
+title Sequence — Approve ADR (Threshold Met -> Auto-Approved)
+
+actor Approver as "Approver (R2)"
+participant "ApprovalController" as ctrl
+participant "TenantContext" as tenant
+participant "ApprovalService" as appSvc
+participant "AdrRepository" as adrRepo
+participant "ConfigRepository" as configRepo
+participant "WorkflowService" as wfSvc
+participant "AuditRepository" as auditRepo
+participant "NotificationService" as notifSvc
+database "Couchbase\n{tenant}.adrs" as cb_adrs
+database "Couchbase\n{tenant}.config" as cb_config
+database "Couchbase\n{tenant}.audit" as cb_audit
+
+Approver -> ctrl : POST /api/adrs/adr-005/decisions\n{ decision: "approved", comment: "LGTM" }
+ctrl -> tenant : getTenantSlug()
+tenant --> ctrl : "acme-corp"
+ctrl -> appSvc : recordDecision("adr-005", "R2", request)
+
+appSvc -> adrRepo : findById("adr-005")
+adrRepo -> cb_adrs : KV GET "adr-005"
+cb_adrs --> adrRepo : AdrDocument\n(status=InReview, cas=100,\napprovers: [{R1,approved},{R2,pending}])
+adrRepo --> appSvc : AdrDocument
+
+appSvc -> appSvc : findApproverEntry(adr, "R2")
+note right: Found: {userId:"R2", status:"pending"}
+
+appSvc -> appSvc : validateNoDuplicate(entry)
+note right: status=="pending" -> OK
+
+appSvc -> appSvc : Update entry:\nstatus="approved"\ncomment="LGTM"\ndecidedAt=now()
+
+appSvc -> appSvc : evaluateThreshold(adr, "acme-corp")
+appSvc -> configRepo : getApprovalThreshold()
+configRepo -> cb_config : N1QL SELECT approvalThreshold
+cb_config --> configRepo : { approvalThreshold: 2 }
+configRepo --> appSvc : 2
+
+appSvc -> appSvc : Count approved: 2 (R1 + R2)\nThreshold: 2\n2 >= 2 => THRESHOLD_MET
+
+appSvc -> wfSvc : transition(adr, Approved)
+wfSvc -> wfSvc : adr.status = Approved
+wfSvc -> adrRepo : save(adr, cas=100)
+adrRepo -> cb_adrs : KV REPLACE "adr-005" (CAS=100)
+cb_adrs --> adrRepo : success (cas=200)
+adrRepo --> wfSvc : updated AdrDocument
+
+wfSvc -> auditRepo : append({action:"status_transition",\nfrom:"InReview", to:"Approved"})
+auditRepo -> cb_audit : KV INSERT
+cb_audit --> auditRepo : success
+
+wfSvc -> notifSvc : notifyTransition(adr, InReview, Approved)
+notifSvc -> notifSvc : Send to author:\n"ADR-005 has been approved"
+notifSvc --> wfSvc : done
+
+wfSvc --> appSvc : updated AdrDocument
+appSvc --> ctrl : updated AdrDocument
+ctrl --> Approver : 200 OK\n{ status: "Approved",\n  approvers: [{R1,approved},{R2,approved}] }
+
+@enduml

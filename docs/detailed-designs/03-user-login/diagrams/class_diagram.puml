@@ -1,0 +1,153 @@
+@startuml class_diagram
+title Class Diagram — User Login & Session
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Controllers" {
+    class AuthController {
+        -authService: AuthenticationService
+        -tokenService: TokenService
+        +login(req, res): Promise<void>
+        +refresh(req, res): Promise<void>
+        +logout(req, res): Promise<void>
+        -setCookies(res, accessToken, refreshToken): void
+        -clearCookies(res): void
+    }
+}
+
+package "Services" {
+    class AuthenticationService {
+        -globalUserRepo: GlobalUserRepository
+        -userRepo: UserRepository
+        -passwordHasher: PasswordHasher
+        -tokenService: TokenService
+        -lockoutService: LockoutService
+        -refreshTokenRepo: RefreshTokenRepository
+        -auditService: AuditService
+        +login(dto: LoginDto): Promise<LoginResult>
+        +logout(refreshTokenJti: string): Promise<void>
+        -selectTenant(memberships: TenantMembership[]): TenantMembership
+    }
+
+    class TokenService {
+        -privateKey: string
+        -publicKey: string
+        -ACCESS_EXPIRY: string = "15m"
+        -REFRESH_EXPIRY: string = "7d"
+        +createAccessToken(payload: AccessTokenPayload): string
+        +createRefreshToken(payload: RefreshTokenPayload): string
+        +verifyAccessToken(token: string): AccessTokenPayload
+        +verifyRefreshToken(token: string): RefreshTokenPayload
+    }
+
+    class LockoutService {
+        -userRepo: UserRepository
+        -emailSender: EmailSender
+        -MAX_ATTEMPTS: number = 5
+        -WINDOW_MINUTES: number = 10
+        -LOCKOUT_MINUTES: number = 15
+        +recordFailedAttempt(userId: string, slug: string): Promise<LockoutStatus>
+        +isLocked(userId: string, slug: string): Promise<boolean>
+        +resetAttempts(userId: string, slug: string): Promise<void>
+        -sendLockoutNotification(user: User): Promise<void>
+    }
+
+    class AuditService {
+        +record(entry: AuditEntry): Promise<void>
+    }
+}
+
+package "Repositories" {
+    class GlobalUserRepository {
+        +findByEmail(email: string): Promise<GlobalUser | null>
+    }
+
+    class UserRepository {
+        +findById(id: string): Promise<User | null>
+        +update(user: User): Promise<void>
+    }
+
+    class RefreshTokenRepository {
+        -bucket: Bucket
+        +store(token: RefreshTokenDoc): Promise<void>
+        +findByHash(tokenHash: string): Promise<RefreshTokenDoc | null>
+        +revoke(tokenHash: string, replacedBy?: string): Promise<void>
+        +revokeFamily(family: string): Promise<void>
+    }
+}
+
+package "DTOs" {
+    class LoginDto {
+        +email: string
+        +password: string
+    }
+
+    class LoginResult {
+        +accessToken: string
+        +refreshToken: string
+        +user: UserProfile
+        +tenant: TenantInfo
+        +memberships: TenantMembership[]
+    }
+
+    class AccessTokenPayload {
+        +sub: string
+        +email: string
+        +tenant_id: string
+        +tenant_slug: string
+        +roles: string[]
+        +iat: number
+        +exp: number
+    }
+
+    class RefreshTokenPayload {
+        +sub: string
+        +family: string
+        +jti: string
+        +iat: number
+        +exp: number
+    }
+
+    class LockoutStatus {
+        +locked: boolean
+        +attemptsRemaining: number
+        +lockedUntil?: Date
+    }
+}
+
+package "Models" {
+    class RefreshTokenDoc {
+        +tokenHash: string
+        +family: string
+        +userId: string
+        +tenantSlug: string
+        +issuedAt: Date
+        +expiresAt: Date
+        +revoked: boolean
+        +revokedAt: Date
+        +replacedBy: string
+    }
+
+    class CookieConfig {
+        +name: string
+        +httpOnly: boolean = true
+        +secure: boolean = true
+        +sameSite: string = "Strict"
+        +path: string
+        +maxAge: number
+    }
+}
+
+AuthController --> AuthenticationService
+AuthController --> TokenService
+AuthenticationService --> GlobalUserRepository
+AuthenticationService --> UserRepository
+AuthenticationService --> PasswordHasher
+AuthenticationService --> TokenService
+AuthenticationService --> LockoutService
+AuthenticationService --> RefreshTokenRepository
+AuthenticationService --> AuditService
+LockoutService --> UserRepository
+
+@enduml

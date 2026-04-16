@@ -1,0 +1,85 @@
+@startuml sequence_create_adr
+title Sequence — Create New ADR (Feature 06)
+
+actor Author
+participant "AdrEditorPage" as Page
+participant "MarkdownEditor" as Editor
+participant "MarkdownPreview" as Preview
+participant "AdrClientService" as Client
+participant "AdrController" as Controller
+participant "TenantContext" as Tenant
+participant "AdrService" as Service
+participant "TemplateService" as TplSvc
+participant "AdrSequenceGenerator" as SeqGen
+participant "AdrRepository" as Repo
+participant "ConfigRepository" as ConfigRepo
+participant "AuditService" as Audit
+database "Couchbase\n(tenant scope)" as CB
+
+== Page Load — Fetch Template ==
+
+Author -> Page : Navigate to /adrs/new
+Page -> Client : getTemplate(tenantSlug)
+Client -> Controller : GET /api/tenants/{slug}/config/template
+Controller -> Tenant : extractTenant(jwt)
+Tenant --> Controller : tenantSlug verified
+Controller -> TplSvc : getTenantTemplate(tenantSlug)
+TplSvc -> ConfigRepo : getByKey(tenantSlug, "adr_template")
+ConfigRepo -> CB : GET `config::adr_template`\nfrom {tenantSlug}.config
+alt Tenant template exists
+    CB --> ConfigRepo : TemplateDocument
+    ConfigRepo --> TplSvc : template
+else No tenant template
+    TplSvc -> TplSvc : getSystemDefault()
+end
+TplSvc --> Controller : TemplateResponse
+Controller --> Client : 200 { body, requiredSections }
+Client --> Page : template
+Page -> Editor : setContent(template.body)
+Page -> Preview : render(template.body)
+
+== Author Edits Content ==
+
+Author -> Editor : Types Markdown content
+Editor -> Page : onChange(content)
+Page -> Preview : render(content)
+Preview --> Page : rendered HTML
+
+== Save Draft ==
+
+Author -> Page : Clicks "Save Draft"
+Page -> Page : validateTemplateSections(body)
+alt Missing required sections
+    Page --> Author : Warning toast:\n"Missing sections: Consequences"
+    note right: Warning only — save proceeds
+end
+Page -> Client : createAdr(tenantSlug, { title, body, tags })
+Client -> Controller : POST /api/tenants/{slug}/adrs\nAuthorization: Bearer {jwt}
+Controller -> Tenant : extractTenant(jwt)
+Tenant --> Controller : tenantSlug verified
+Controller -> Controller : validate CreateAdrDto
+Controller -> Service : createAdr(tenantSlug, authorId, dto)
+
+Service -> SeqGen : nextNumber(tenantSlug)
+SeqGen -> Repo : findMaxAdrNumber(tenantSlug)
+Repo -> CB : SELECT MAX(adrNumber)\nFROM `archq`.`{tenantSlug}`.adrs\nWHERE type = "adr"
+CB --> Repo : currentMax (e.g., 5)
+Repo --> SeqGen : 5
+SeqGen --> Service : "ADR-006"
+
+Service -> Service : Build AdrDocument\n{ adrNumber: "ADR-006",\n  status: "draft",\n  version: 1, ... }
+Service -> Repo : insert(tenantSlug, adrDoc)
+Repo -> CB : INSERT INTO\n`archq`.`{tenantSlug}`.adrs\n(KEY, VALUE)
+CB --> Repo : success
+Repo --> Service : AdrDocument
+
+Service -> Audit : record(tenantSlug,\n{ action: "adr.created",\n  resourceId: adrDoc.id,\n  actorId: authorId })
+Audit -> CB : INSERT INTO\n`archq`.`{tenantSlug}`.audit
+
+Service --> Controller : AdrDocument
+Controller --> Client : 201 AdrResponse\n{ id, adrNumber, title, status }
+Client --> Page : AdrResponse
+Page --> Author : Success toast:\n"ADR-006 created"
+Page -> Page : Navigate to /adrs/ADR-006
+
+@enduml

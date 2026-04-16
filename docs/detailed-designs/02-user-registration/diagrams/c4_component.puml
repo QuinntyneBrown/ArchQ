@@ -1,0 +1,34 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — User Registration (API Service)
+
+Container_Boundary(api, "API Service") {
+    Component(ctrl, "AuthController", "Express Router", "POST /api/auth/register\nPOST /api/auth/verify-email")
+    Component(reg, "RegistrationService", "Service", "Orchestrates registration workflow:\nvalidation, hashing, provisioning, verification")
+    Component(hash, "PasswordHasher", "Utility", "Bcrypt hashing with cost factor 12")
+    Component(verify, "EmailVerificationService", "Service", "Generates tokens, sends verification emails")
+    Component(invite, "InviteService", "Service", "Validates invite tokens for org joining")
+    Component(tenant, "TenantService", "Service", "Provisions new tenant if org is new")
+    Component(urepo, "UserRepository", "Repository", "CRUD on {tenant}.users collection")
+    Component(grepo, "GlobalUserRepository", "Repository", "Manages _system.global_users mappings")
+    Component(audit, "AuditService", "Service", "Records registration audit entries")
+}
+
+ContainerDb(cb, "Couchbase Cluster", "Couchbase 7+", "_system.global_users\n{tenant}.users")
+System_Ext(email, "Email Service", "Sends verification emails")
+
+Rel(ctrl, reg, "Invokes")
+Rel(reg, hash, "Hashes password")
+Rel(reg, verify, "Generates verification token")
+Rel(reg, invite, "Validates invite")
+Rel(reg, tenant, "Provisions tenant")
+Rel(reg, urepo, "Creates user document")
+Rel(reg, grepo, "Creates global mapping")
+Rel(reg, audit, "Writes audit entry")
+Rel(verify, email, "Sends email", "SMTP/API")
+Rel(urepo, cb, "KV/N1QL", "{tenant}.users")
+Rel(grepo, cb, "KV/N1QL", "_system.global_users")
+
+SHOW_LEGEND()
+@enduml

@@ -1,0 +1,89 @@
+@startuml sequence_switch_org
+title Sequence Diagram — Switch Organization
+
+actor "User" as Client
+participant "OrgSwitcherComponent" as UI
+participant "OrgController" as Ctrl
+participant "OrgSwitchService" as Svc
+participant "GlobalUserRepository" as GRepo
+participant "UserRepository" as URepo
+participant "TokenService" as Token
+participant "RefreshTokenRepository" as RRepo
+participant "AuditService" as Audit
+database "Couchbase" as DB
+
+Client -> UI : Clicks org switcher,\nselects "Beta Inc"
+activate UI
+
+UI -> Ctrl : POST /api/orgs/switch\n{ tenantSlug: "beta-inc" }\nCookie: archq_access=<current-jwt>
+activate Ctrl
+
+Ctrl -> Svc : switchOrg(currentUserId, "beta-inc")
+activate Svc
+
+Svc -> GRepo : findByEmail("jane@example.com")
+activate GRepo
+GRepo -> DB : GET guser::{email-hash}\nFROM _system.global_users
+DB --> GRepo : GlobalUser with memberships
+GRepo --> Svc : globalUser
+deactivate GRepo
+
+Svc -> Svc : validateMembership(email, "beta-inc")
+note right: Find "beta-inc" in\nmemberships array
+
+alt User is not a member of target org
+    Svc --> Ctrl : throw NotAMemberError
+    Ctrl --> UI : 403 { error: "NOT_A_MEMBER" }
+    UI -> UI : Show error notification
+end
+
+Svc -> URepo : findById(targetUserId)
+activate URepo
+note right: UserRepository now scoped\nto "beta-inc" tenant
+URepo -> DB : GET user::{targetUserId}\nFROM beta-inc.users
+DB --> URepo : User { roles: ["reviewer"] }
+URepo --> Svc : user with roles
+deactivate URepo
+
+Svc -> RRepo : revokeFamily(currentRefreshFamily)
+activate RRepo
+RRepo -> DB : UPDATE _system.refresh_tokens\nSET revoked=true\nWHERE family=$currentFamily
+RRepo --> Svc : OK
+deactivate RRepo
+
+Svc -> Token : createAccessToken({\nsub: targetUserId,\ntenant_slug: "beta-inc",\nroles: ["reviewer"] })
+activate Token
+Token --> Svc : newAccessToken
+deactivate Token
+
+Svc -> Token : createRefreshToken({\nsub: targetUserId,\nfamily: newFamily })
+activate Token
+Token --> Svc : newRefreshToken
+deactivate Token
+
+Svc -> RRepo : store(newRefreshTokenDoc)
+activate RRepo
+RRepo -> DB : UPSERT rtoken::{newHash}\nINTO _system.refresh_tokens
+RRepo --> Svc : OK
+deactivate RRepo
+
+Svc -> Audit : record({\naction: "ORG_SWITCHED",\nfrom: "acme-corp",\nto: "beta-inc" })
+activate Audit
+Audit --> Svc : OK
+deactivate Audit
+
+Svc --> Ctrl : SwitchResult
+deactivate Svc
+
+Ctrl -> Ctrl : setCookies(res,\nnewAccessToken,\nnewRefreshToken)
+
+Ctrl --> UI : 200 OK\nSet-Cookie: archq_access=<new>\nSet-Cookie: archq_refresh=<new>\n{ tenant, user }
+deactivate Ctrl
+
+UI -> UI : authStore.setActiveTenant("Beta Inc")
+UI -> UI : Navigate to dashboard\nwith new tenant context
+
+UI --> Client : UI updated to "Beta Inc"
+deactivate UI
+
+@enduml

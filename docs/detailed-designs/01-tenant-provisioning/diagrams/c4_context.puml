@@ -1,0 +1,20 @@
+@startuml c4_context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title C4 Context Diagram — ArchQ Tenant Provisioning
+
+Person(admin, "Admin User", "Creates and manages organizations")
+Person(user, "End User", "Works within a tenant-scoped context")
+
+System(archq, "ArchQ", "Multi-tenant ADR management system")
+
+System_Ext(email, "Email Service", "Sends notifications and verification emails")
+System_Ext(idp, "Identity Provider", "Future: External SSO integration")
+
+Rel(admin, archq, "Provisions tenants, manages settings", "HTTPS")
+Rel(user, archq, "Creates/reviews ADRs within tenant", "HTTPS")
+Rel(archq, email, "Sends email notifications", "SMTP/API")
+Rel_L(archq, idp, "Authenticates users (future)", "OIDC")
+
+SHOW_LEGEND()
+@enduml

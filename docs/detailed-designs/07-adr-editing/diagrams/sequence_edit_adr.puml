@@ -1,0 +1,112 @@
+@startuml sequence_edit_adr
+title Sequence — Edit ADR (Feature 07)
+
+actor User as "Author / Admin"
+participant "AdrEditorPage" as Page
+participant "AdrClientService" as Client
+participant "AdrController" as Controller
+participant "TenantContext" as Tenant
+participant "AdrService" as Service
+participant "AdrVersionService" as VersionSvc
+participant "AdrRepository" as AdrRepo
+participant "AdrVersionRepository" as VerRepo
+participant "NotificationService" as Notify
+participant "AuditService" as Audit
+database "Couchbase\n(tenant scope)" as CB
+
+== Load ADR for Editing ==
+
+User -> Page : Navigate to /adrs/{adrId}/edit
+Page -> Client : getAdr(tenantSlug, adrId)
+Client -> Controller : GET /api/tenants/{slug}/adrs/{adrId}\nAuthorization: Bearer {jwt}
+Controller -> Tenant : extractTenant(jwt)
+Tenant --> Controller : tenantSlug verified
+Controller -> Service : getAdr(tenantSlug, adrId)
+Service -> AdrRepo : findById(tenantSlug, adrId)
+AdrRepo -> CB : GET `adr::{adrId}`\nfrom {tenantSlug}.adrs
+CB --> AdrRepo : AdrDocument
+AdrRepo --> Service : AdrDocument
+Service --> Controller : AdrDocument
+Controller --> Client : 200 AdrResponse
+Client --> Page : AdrResponse
+
+alt status in [APPROVED, REJECTED, SUPERSEDED, DEPRECATED]
+    Page -> Page : Set isReadOnly = true
+    Page --> User : Read-only view with message:\n"This ADR is finalized and cannot be edited."
+else status in [DRAFT, IN_REVIEW]
+    Page -> Page : checkEditPermission()
+    alt Author owns ADR OR user is Admin
+        Page -> Page : Set isReadOnly = false
+        Page --> User : Editable Markdown editor\nwith current content loaded
+    else Not authorized
+        Page --> User : Read-only view with message:\n"You do not have permission to edit this ADR."
+    end
+end
+
+== Edit and Save ==
+
+User -> Page : Edits title/body, clicks "Save"
+Page -> Client : updateAdr(tenantSlug, adrId,\n{ title, body, tags })
+Client -> Controller : PUT /api/tenants/{slug}/adrs/{adrId}\nAuthorization: Bearer {jwt}
+Controller -> Tenant : extractTenant(jwt)
+Controller -> Controller : validate UpdateAdrDto
+Controller -> Service : updateAdr(tenantSlug, userId, adrId, dto)
+
+Service -> AdrRepo : findById(tenantSlug, adrId)
+AdrRepo -> CB : GET `adr::{adrId}`
+CB --> AdrRepo : AdrDocument (current)
+AdrRepo --> Service : existingAdr
+
+Service -> Service : assertEditable(existingAdr, userId, userRoles)
+note right
+  Checks:
+  1. Status is DRAFT or IN_REVIEW
+  2. User is author OR has Admin role
+  Throws 403 if checks fail
+end note
+
+== Archive Current Version ==
+
+Service -> VersionSvc : archiveCurrentVersion(tenantSlug, existingAdr)
+VersionSvc -> VerRepo : insert(tenantSlug, adrVersionDoc)
+note right
+  AdrVersionDocument {
+    adrId: existingAdr.id,
+    version: existingAdr.version,
+    title: existingAdr.title,
+    body: existingAdr.body,
+    editedBy: userId,
+    createdAt: now()
+  }
+end note
+VerRepo -> CB : INSERT INTO\n{tenantSlug}.adr_versions
+CB --> VerRepo : success
+VerRepo --> VersionSvc : AdrVersionDocument
+
+== Update ADR Document ==
+
+Service -> Service : Increment version,\nupdate title/body/tags/updatedAt
+Service -> AdrRepo : update(tenantSlug, adrId, updatedAdr)
+AdrRepo -> CB : REPLACE `adr::{adrId}`\nin {tenantSlug}.adrs
+CB --> AdrRepo : success
+AdrRepo --> Service : AdrDocument (updated)
+
+== Notify Approvers (if In Review) ==
+
+alt status == IN_REVIEW
+    Service -> Notify : notifyApproversOfEdit(tenantSlug, updatedAdr)
+    Notify -> CB : Query assigned approvers\nfrom {tenantSlug}.adrs
+    Notify -> Notify : Send in-app + email\nnotifications to each approver
+end
+
+== Audit ==
+
+Service -> Audit : record(tenantSlug,\n{ action: "adr.updated",\n  resourceId: adrId,\n  actorId: userId,\n  metadata: { version: newVersion } })
+Audit -> CB : INSERT INTO\n{tenantSlug}.audit
+
+Service --> Controller : AdrDocument (updated)
+Controller --> Client : 200 AdrResponse\n{ id, version: N+1, updatedAt }
+Client --> Page : AdrResponse
+Page --> User : Success toast:\n"ADR updated (v{N+1})"
+
+@enduml

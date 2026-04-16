@@ -1,0 +1,107 @@
+@startuml class_diagram
+title Class Diagram — Version History & Diff
+
+class VersionController {
+    -versionService: VersionService
+    +listVersions(req, res): Promise<void>
+    +getVersion(req, res): Promise<void>
+    +compareVersions(req, res): Promise<void>
+}
+
+class VersionService {
+    -versionRepository: VersionRepository
+    -diffEngine: DiffEngine
+    -auditService: AuditService
+    +createVersion(adrId, body, authorId, changeDescription?): Promise<AdrVersion>
+    +listVersions(adrId): Promise<VersionSummary[]>
+    +getVersion(adrId, version): Promise<AdrVersion>
+    +compareVersions(adrId, fromVersion, toVersion): Promise<CompareResult>
+    -getNextVersionNumber(adrId): Promise<number>
+}
+
+class VersionRepository {
+    +insert(version: AdrVersion): Promise<AdrVersion>
+    +findByAdrId(adrId: string): Promise<VersionSummary[]>
+    +findByVersion(adrId: string, version: number): Promise<AdrVersion | null>
+    +getMaxVersion(adrId: string): Promise<number>
+}
+
+class DiffEngine {
+    +diff(oldBody: string, newBody: string): DiffResult
+    -computeHunks(oldLines: string[], newLines: string[]): DiffHunk[]
+}
+
+class AdrVersion <<Document>> {
+    +type: "adr_version"
+    +adrId: string
+    +version: number
+    +body: string
+    +authorId: string
+    +createdAt: string
+    +changeDescription: string
+}
+
+class VersionSummary {
+    +version: number
+    +authorId: string
+    +authorName: string
+    +createdAt: string
+    +changeDescription: string
+}
+
+class DiffResult {
+    +hunks: DiffHunk[]
+    +stats: DiffStats
+}
+
+class DiffStats {
+    +additions: number
+    +deletions: number
+    +unchanged: number
+}
+
+class DiffHunk {
+    +oldStart: number
+    +oldLines: number
+    +newStart: number
+    +newLines: number
+    +changes: DiffChange[]
+}
+
+class DiffChange {
+    +type: "add" | "delete" | "unchanged"
+    +lineNumber: number
+    +content: string
+}
+
+class CompareResult {
+    +adrId: string
+    +fromVersion: number
+    +toVersion: number
+    +stats: DiffStats
+    +hunks: DiffHunk[]
+}
+
+class AdrService {
+    -versionService: VersionService
+    +updateContent(adrId, newBody, authorId): Promise<void>
+}
+
+class TenantScopedRepository<T> {
+    #tenantContext: TenantContext
+    #collection: Collection
+}
+
+VersionController --> VersionService
+VersionService --> VersionRepository
+VersionService --> DiffEngine
+AdrService --> VersionService
+VersionRepository --|> TenantScopedRepository
+DiffEngine ..> DiffResult : returns
+DiffResult *-- DiffHunk
+DiffResult *-- DiffStats
+DiffHunk *-- DiffChange
+VersionService ..> CompareResult : returns
+VersionService ..> AdrVersion : creates
+
+@enduml

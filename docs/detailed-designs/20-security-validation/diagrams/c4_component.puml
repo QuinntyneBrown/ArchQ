@@ -1,0 +1,37 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — Security & Validation
+
+Person(user, "API Client", "Sends requests to ArchQ API")
+
+System_Boundary(api, "ArchQ API Service") {
+    Component(https, "HttpsRedirectMiddleware", "Middleware", "Redirects HTTP to HTTPS (301)")
+    Component(sizeLimiter, "RequestSizeLimiter", "Middleware", "Enforces 1 MB request body limit (413)")
+    Component(secHeaders, "SecurityHeadersMiddleware", "Middleware", "Sets CSP, HSTS, X-Frame-Options, etc.")
+    Component(cors, "CorsMiddleware", "Middleware", "Strict origin allowlist; credentials support")
+    Component(jwt, "JwtAuthMiddleware", "Middleware", "Validates JWT from HttpOnly cookie; 401 on expiry")
+    Component(tenant, "TenantContextMiddleware", "Middleware", "Extracts tenant from JWT claims, not headers")
+    Component(rateLimiter, "RateLimiter", "Middleware", "Rate-limits sensitive endpoints (429)")
+    Component(schema, "SchemaValidator", "Middleware", "Validates request bodies against JSON schemas (400)")
+    Component(inputSan, "InputSanitizer", "Utility", "Trims, normalizes, strips control chars from inputs")
+    Component(mdSan, "MarkdownSanitizer", "Utility", "Strips XSS vectors from Markdown content")
+    Component(scopedRepo, "TenantScopedRepository", "Base Class", "Parameterized N1QL; tenant-scoped queries")
+}
+
+ContainerDb(cb, "Couchbase", "All collections", "Tenant-scoped data with parameterized N1QL")
+
+Rel(user, https, "HTTP/HTTPS request")
+Rel(https, sizeLimiter, "HTTPS only")
+Rel(sizeLimiter, secHeaders, "Within size limit")
+Rel(secHeaders, cors, "Headers set")
+Rel(cors, jwt, "Origin validated")
+Rel(jwt, tenant, "JWT valid")
+Rel(tenant, rateLimiter, "Tenant resolved")
+Rel(rateLimiter, schema, "Within rate limit")
+Rel(schema, inputSan, "Schema valid")
+Rel(inputSan, mdSan, "Input cleaned")
+Rel(scopedRepo, cb, "Parameterized N1QL", "Couchbase SDK")
+
+SHOW_LEGEND()
+@enduml

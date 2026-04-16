@@ -1,0 +1,120 @@
+@startuml class_diagram
+title Class Diagram — Security & Validation
+
+class HttpsRedirectMiddleware {
+    +handle(req, res, next): void
+}
+
+class RequestSizeLimiter {
+    -MAX_BODY_SIZE: string = "1mb"
+    +configure(app: Express): void
+}
+
+class JwtAuthMiddleware {
+    -signingKey: string
+    -COOKIE_NAME: string = "access_token"
+    +handle(req, res, next): void
+    -extractToken(req): string | null
+    -verifyToken(token: string): JwtPayload
+}
+
+class TenantContextMiddleware {
+    +handle(req, res, next): void
+    -resolveTenant(jwtPayload): TenantContext
+}
+
+class TenantContext {
+    +tenantId: string
+    +tenantSlug: string
+}
+
+class SchemaValidator {
+    -ajv: Ajv
+    -schemas: Map<string, ValidateFunction>
+    +validate(schemaName: string): Middleware
+    +registerSchema(name: string, schema: JSONSchema): void
+    -formatErrors(errors: ErrorObject[]): ValidationDetail[]
+}
+
+class InputSanitizer {
+    +sanitize(input: string, maxLength?: number): string
+    +sanitizeObject(obj: Record<string, any>, rules: SanitizationRules): Record<string, any>
+    -trim(s: string): string
+    -normalizeUnicode(s: string): string
+    -stripControlChars(s: string): string
+    -stripNullBytes(s: string): string
+}
+
+class MarkdownSanitizer {
+    +sanitize(markdown: string): string
+    -stripScriptTags(input: string): string
+    -stripJavascriptUrls(input: string): string
+    -stripEventHandlers(input: string): string
+    -stripDangerousTags(input: string): string
+    -enforceHttpsUrls(input: string): string
+}
+
+class SecurityHeadersMiddleware {
+    +handle(req, res, next): void
+    -setHsts(res): void
+    -setCsp(res): void
+    -setFrameOptions(res): void
+    -setContentTypeOptions(res): void
+    -setReferrerPolicy(res): void
+    -setPermissionsPolicy(res): void
+}
+
+class RateLimiter {
+    -store: RateLimitStore
+    +createLimiter(windowMs, max): Middleware
+    +loginLimiter: Middleware
+    +registerLimiter: Middleware
+    +generalLimiter: Middleware
+}
+
+class CorsMiddleware {
+    -allowedOrigins: string[]
+    +configure(app: Express): void
+}
+
+class TenantScopedRepository<T> {
+    #tenantContext: TenantContext
+    #collection: Collection
+    +getById(id: string): Promise<T | null>
+    +query(statement: string, params: Record<string, any>): Promise<T[]>
+    +upsert(id: string, doc: T): Promise<void>
+    +remove(id: string): Promise<void>
+    #resolveCollection(): Collection
+}
+
+class JwtPayload {
+    +sub: string
+    +tenant_id: string
+    +tenant_slug: string
+    +role: string
+    +exp: number
+    +iat: number
+}
+
+class ValidationDetail {
+    +field: string
+    +message: string
+}
+
+class CookieConfig {
+    +name: string = "access_token"
+    +httpOnly: boolean = true
+    +secure: boolean = true
+    +sameSite: "Strict"
+    +path: string = "/"
+    +maxAge: number = 3600000
+}
+
+JwtAuthMiddleware ..> JwtPayload : extracts
+JwtAuthMiddleware ..> CookieConfig : uses
+TenantContextMiddleware ..> TenantContext : creates
+TenantContextMiddleware ..> JwtPayload : reads
+SchemaValidator ..> ValidationDetail : produces
+TenantScopedRepository ..> TenantContext : uses
+
+@enduml

@@ -1,0 +1,49 @@
+@startuml sequence_reply_comment
+title Sequence Diagram — Reply to Comment
+
+actor "Author/Reviewer/Admin" as User
+participant "CommentController" as Ctrl
+participant "AuthorizationGuard" as Auth
+participant "CommentService" as Svc
+participant "MarkdownSanitizer" as Sanitizer
+participant "CommentRepository" as Repo
+participant "AuditService" as Audit
+database "Couchbase\n(comments)" as CB
+
+User -> Ctrl : POST /api/adrs/:adrId/comments\n{ body, parentCommentId: "comment::parent-uuid" }
+Ctrl -> Auth : requireRole(Author, Reviewer, Admin)
+Auth --> Ctrl : OK
+
+Ctrl -> Svc : addComment(adrId, body, "comment::parent-uuid", authorId)
+
+Svc -> Svc : Validate ADR exists
+
+Svc -> Repo : findById("comment::parent-uuid")
+Repo -> CB : collection.get("comment::parent-uuid")
+
+alt Parent comment not found
+    CB --> Repo : DocumentNotFoundException
+    Repo --> Svc : null
+    Svc --> Ctrl : 404 Not Found
+    Ctrl --> User : 404 { error: "PARENT_COMMENT_NOT_FOUND" }
+else Parent exists
+    CB --> Repo : parentComment
+    Repo --> Svc : parentComment
+
+    Svc -> Sanitizer : sanitize(body)
+    Sanitizer --> Svc : sanitizedBody
+
+    Svc -> Svc : Generate reply UUID
+    Svc -> Repo : insert(replyDoc)
+    Repo -> CB : collection.insert("comment::reply-uuid", doc)
+    CB --> Repo : MutationResult
+    Repo --> Svc : Reply
+
+    Svc -> Audit : record("comment_added",\nadrId, { parentCommentId })
+    Audit -> CB : insert audit entry
+
+    Svc --> Ctrl : Reply
+    Ctrl --> User : 201 Created { id, body, parentCommentId, ... }
+end
+
+@enduml

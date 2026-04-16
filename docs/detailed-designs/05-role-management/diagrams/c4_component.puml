@@ -1,0 +1,30 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — Role Management (API Service)
+
+Container_Boundary(api, "API Service") {
+    Component(ctrl, "RoleController", "Express Router", "GET/POST/PUT/DELETE role endpoints\nAdmin-only access")
+    Component(svc, "RoleService", "Service", "Assigns/revokes roles, validates changes,\nenforces last-admin rule")
+    Component(policy, "RolePolicy", "Policy", "Permission matrix, business rules:\nself-approval prevention, role capabilities")
+    Component(guard, "AuthorizationGuard", "Middleware", "Checks roles on protected routes;\nlive DB check for sensitive ops")
+    Component(urepo, "UserRepository", "Repository", "Reads/updates user.roles in\n{tenant}.users collection")
+    Component(audit, "AuditService", "Service", "Records ROLE_ASSIGNED and\nROLE_REVOKED audit entries")
+    Component(mw, "TenantContextMiddleware", "Middleware", "Provides TenantContext with\ntenant_slug and userId from JWT")
+}
+
+ContainerDb(cb, "Couchbase Cluster", "Couchbase 7+", "{tenant}.users\n{tenant}.audit")
+
+Rel(ctrl, guard, "Protected by")
+Rel(ctrl, svc, "Invokes")
+Rel(svc, policy, "Validates rules")
+Rel(svc, urepo, "Updates roles")
+Rel(svc, audit, "Records changes")
+Rel(guard, policy, "Checks permissions")
+Rel(guard, urepo, "Live role check\n(sensitive ops)")
+Rel(mw, guard, "Provides context")
+Rel(urepo, cb, "KV/N1QL", "{tenant}.users")
+Rel(audit, cb, "KV", "{tenant}.audit")
+
+SHOW_LEGEND()
+@enduml

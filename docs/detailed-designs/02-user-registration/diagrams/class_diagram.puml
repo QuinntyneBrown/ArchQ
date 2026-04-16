@@ -1,0 +1,185 @@
+@startuml class_diagram
+title Class Diagram — User Registration
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Controllers" {
+    class AuthController {
+        -registrationService: RegistrationService
+        -emailVerificationService: EmailVerificationService
+        +register(req, res): Promise<void>
+        +verifyEmail(req, res): Promise<void>
+    }
+}
+
+package "Services" {
+    class RegistrationService {
+        -userRepository: UserRepository
+        -globalUserRepository: GlobalUserRepository
+        -passwordHasher: PasswordHasher
+        -emailVerificationService: EmailVerificationService
+        -tenantService: TenantService
+        -inviteService: InviteService
+        -auditService: AuditService
+        +register(dto: RegisterDto): Promise<RegistrationResult>
+        -checkEmailAvailability(email: string): Promise<boolean>
+        -determineOrCreateTenant(orgName: string, inviteToken?: string): Promise<Tenant>
+    }
+
+    class EmailVerificationService {
+        -globalUserRepository: GlobalUserRepository
+        -emailSender: EmailSender
+        +generateToken(userId: string, tenantSlug: string): Promise<string>
+        +verifyToken(rawToken: string): Promise<VerificationResult>
+        +resendVerification(email: string): Promise<void>
+        -hashToken(rawToken: string): string
+    }
+
+    class InviteService {
+        -inviteRepository: InviteRepository
+        +validateInvite(token: string): Promise<InviteValidation>
+        +consumeInvite(token: string): Promise<void>
+    }
+
+    class TenantService {
+        +createTenant(dto: CreateTenantDto): Promise<Tenant>
+    }
+
+    class AuditService {
+        +record(entry: AuditEntry): Promise<void>
+    }
+}
+
+package "Repositories" {
+    class UserRepository {
+        -tenantContext: TenantContext
+        +create(user: User): Promise<void>
+        +findById(id: string): Promise<User | null>
+        +findByEmail(email: string): Promise<User | null>
+        +update(user: User): Promise<void>
+    }
+
+    class GlobalUserRepository {
+        -bucket: Bucket
+        +findByEmail(email: string): Promise<GlobalUser | null>
+        +create(globalUser: GlobalUser): Promise<void>
+        +addMembership(email: string, membership: TenantMembership): Promise<void>
+        +storeVerificationToken(token: VerificationToken): Promise<void>
+        +findVerificationToken(tokenHash: string): Promise<VerificationToken | null>
+    }
+}
+
+package "Utilities" {
+    class PasswordHasher {
+        -COST_FACTOR: number = 12
+        +hash(plaintext: string): Promise<string>
+        +verify(plaintext: string, hash: string): Promise<boolean>
+    }
+
+    class PasswordValidator {
+        -MIN_LENGTH: number = 8
+        -commonPasswords: Set<string>
+        +validate(password: string): ValidationResult
+        -hasUppercase(pw: string): boolean
+        -hasLowercase(pw: string): boolean
+        -hasDigit(pw: string): boolean
+        -hasSpecialChar(pw: string): boolean
+        -isCommon(pw: string): boolean
+    }
+}
+
+package "DTOs" {
+    class RegisterDto {
+        +fullName: string
+        +email: string
+        +password: string
+        +organizationName: string
+        +inviteToken?: string
+    }
+
+    class RegistrationResult {
+        +success: boolean
+        +message: string
+    }
+
+    class VerificationResult {
+        +valid: boolean
+        +userId?: string
+        +tenantSlug?: string
+        +error?: string
+    }
+}
+
+package "Models" {
+    class User {
+        +id: string
+        +email: string
+        +fullName: string
+        +passwordHash: string
+        +status: UserStatus
+        +roles: Role[]
+        +emailVerified: boolean
+        +emailVerificationTokenHash: string
+        +emailVerificationExpiresAt: Date
+        +createdAt: Date
+        +updatedAt: Date
+        +lastLoginAt: Date
+        +failedLoginAttempts: number
+        +lockedUntil: Date
+    }
+
+    class GlobalUser {
+        +email: string
+        +memberships: TenantMembership[]
+        +createdAt: Date
+    }
+
+    class TenantMembership {
+        +tenantId: string
+        +tenantSlug: string
+        +userId: string
+        +status: string
+    }
+
+    class VerificationToken {
+        +tokenHash: string
+        +userId: string
+        +tenantSlug: string
+        +expiresAt: Date
+        +used: boolean
+        +createdAt: Date
+    }
+
+    enum UserStatus {
+        PENDING_VERIFICATION
+        ACTIVE
+        SUSPENDED
+        DEACTIVATED
+    }
+
+    enum Role {
+        ADMIN
+        AUTHOR
+        REVIEWER
+        VIEWER
+    }
+
+    User --> UserStatus
+    User --> Role
+    GlobalUser --> TenantMembership
+}
+
+AuthController --> RegistrationService
+AuthController --> EmailVerificationService
+RegistrationService --> UserRepository
+RegistrationService --> GlobalUserRepository
+RegistrationService --> PasswordHasher
+RegistrationService --> PasswordValidator
+RegistrationService --> EmailVerificationService
+RegistrationService --> TenantService
+RegistrationService --> InviteService
+RegistrationService --> AuditService
+EmailVerificationService --> GlobalUserRepository
+
+@enduml

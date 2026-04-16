@@ -1,0 +1,40 @@
+@startuml sequence_compare_versions
+title Sequence Diagram — Compare Two Versions
+
+actor "User" as User
+participant "VersionController" as Ctrl
+participant "VersionService" as Svc
+participant "VersionRepository" as Repo
+participant "DiffEngine" as Diff
+database "Couchbase\n(adr_versions)" as CB
+
+User -> Ctrl : GET /api/adrs/:adrId/versions/compare?from=2&to=5
+Ctrl -> Svc : compareVersions(adrId, 2, 5)
+
+par Load both versions in parallel
+    Svc -> Repo : findByVersion(adrId, 2)
+    Repo -> CB : collection.get("adrver::adrId::v2")
+    CB --> Repo : version 2 document
+    Repo --> Svc : AdrVersion (v2)
+also
+    Svc -> Repo : findByVersion(adrId, 5)
+    Repo -> CB : collection.get("adrver::adrId::v5")
+    CB --> Repo : version 5 document
+    Repo --> Svc : AdrVersion (v5)
+end
+
+alt Either version not found
+    Svc --> Ctrl : 404 VERSION_NOT_FOUND
+    Ctrl --> User : 404 { error: "VERSION_NOT_FOUND" }
+else Both versions loaded
+    Svc -> Diff : diff(v2.body, v5.body)
+    Diff -> Diff : Split into lines,\ncompute Myers diff,\nassemble hunks
+    Diff --> Svc : DiffResult { hunks, stats }
+
+    Svc -> Svc : Build CompareResult\n{ fromVersion: 2, toVersion: 5,\nstats, hunks }
+
+    Svc --> Ctrl : CompareResult
+    Ctrl --> User : 200 OK\n{ adrId, fromVersion, toVersion,\nstats, hunks: [...] }
+end
+
+@enduml

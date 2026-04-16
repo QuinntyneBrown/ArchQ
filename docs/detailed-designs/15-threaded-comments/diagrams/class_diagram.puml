@@ -1,0 +1,86 @@
+@startuml class_diagram
+title Class Diagram — Threaded Comments
+
+class CommentController {
+    -commentService: CommentService
+    +addComment(req, res): Promise<void>
+    +listComments(req, res): Promise<void>
+    +getComment(req, res): Promise<void>
+    +editComment(req, res): Promise<void>
+    +deleteComment(req, res): Promise<void>
+}
+
+class CommentService {
+    -commentRepository: CommentRepository
+    -markdownSanitizer: MarkdownSanitizer
+    -auditService: AuditService
+    -EDIT_WINDOW_MS: number = 900000
+    +addComment(adrId, body, parentCommentId, authorId): Promise<Comment>
+    +listComments(adrId): Promise<CommentThread[]>
+    +editComment(commentId, body, requesterId): Promise<Comment>
+    +deleteComment(commentId, requesterId, isAdmin): Promise<void>
+    -canEdit(comment, requesterId): boolean
+    -assembleThreads(comments): CommentThread[]
+}
+
+class CommentRepository {
+    +insert(comment: Comment): Promise<Comment>
+    +findById(id: string): Promise<Comment | null>
+    +findByAdrId(adrId: string): Promise<Comment[]>
+    +upsert(id: string, comment: Comment): Promise<void>
+    +softDelete(id: string): Promise<void>
+}
+
+class MarkdownSanitizer {
+    +sanitize(markdown: string): string
+    -stripScriptTags(input: string): string
+    -stripJavascriptUrls(input: string): string
+    -stripEventHandlers(input: string): string
+}
+
+class AuthorizationGuard {
+    +requireRole(...roles: Role[]): Middleware
+    +requireCommentAuthor(commentId: string): Middleware
+}
+
+class Comment <<Document>> {
+    +type: "comment"
+    +adrId: string
+    +parentCommentId: string | null
+    +body: string
+    +authorId: string
+    +createdAt: string
+    +updatedAt: string
+    +edited: boolean
+    +deleted: boolean
+}
+
+class CommentThread {
+    +id: string
+    +body: string
+    +authorId: string
+    +authorName: string
+    +createdAt: string
+    +edited: boolean
+    +canEdit: boolean
+    +replies: CommentThread[]
+}
+
+class TenantScopedRepository<T> {
+    #tenantContext: TenantContext
+    #collection: Collection
+    +getById(id: string): Promise<T | null>
+    +query(statement: string, params: Record<string, any>): Promise<T[]>
+    +upsert(id: string, doc: T): Promise<void>
+    +remove(id: string): Promise<void>
+}
+
+CommentController --> CommentService
+CommentController --> AuthorizationGuard
+CommentService --> CommentRepository
+CommentService --> MarkdownSanitizer
+CommentRepository --|> TenantScopedRepository
+CommentService ..> Comment : creates/updates
+CommentService ..> CommentThread : assembles
+
+@enduml

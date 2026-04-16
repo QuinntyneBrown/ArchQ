@@ -1,0 +1,23 @@
+@startuml sequence_view_history
+title Sequence Diagram — View Version History
+
+actor "User" as User
+participant "VersionController" as Ctrl
+participant "VersionService" as Svc
+participant "VersionRepository" as Repo
+database "Couchbase\n(adr_versions)" as CB
+
+User -> Ctrl : GET /api/adrs/:adrId/versions
+Ctrl -> Svc : listVersions(adrId)
+
+Svc -> Repo : findByAdrId(adrId)
+Repo -> CB : N1QL: SELECT version, authorId, createdAt\nFROM adr_versions\nWHERE type = "adr_version"\nAND adrId = $adrId\nORDER BY version DESC
+CB --> Repo : version metadata rows
+Repo --> Svc : VersionSummary[]
+
+Svc -> Svc : Enrich with author display names\n(from user cache)
+
+Svc --> Ctrl : VersionSummary[]
+Ctrl --> User : 200 OK\n{ adrId, totalVersions, versions: [...] }
+
+@enduml

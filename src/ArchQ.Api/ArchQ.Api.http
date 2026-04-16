@@ -1,0 +1,13 @@
+@ArchQ.Api_HostAddress = http://localhost:5299
+
+#if (EnableOpenAPI)
+GET {{ArchQ.Api_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###
+#endif
+
+GET {{ArchQ.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

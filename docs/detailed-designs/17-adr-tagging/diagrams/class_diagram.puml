@@ -1,0 +1,75 @@
+@startuml class_diagram
+title Class Diagram — ADR Tagging
+
+class TagController {
+    -tagService: TagService
+    +addTags(req, res): Promise<void>
+    +removeTags(req, res): Promise<void>
+    +listAdrTags(req, res): Promise<void>
+    +listTenantTags(req, res): Promise<void>
+    +autocomplete(req, res): Promise<void>
+}
+
+class TagService {
+    -tagRepository: TagRepository
+    -adrRepository: AdrRepository
+    -auditService: AuditService
+    +addTags(adrId, tagNames, userId): Promise<string[]>
+    +removeTag(adrId, tagName, userId): Promise<string[]>
+    +autocomplete(prefix: string): Promise<TagSuggestion[]>
+    +listTenantTags(): Promise<Tag[]>
+    -normalizeName(name: string): string
+    -ensureTagExists(name, userId): Promise<Tag>
+    -incrementUsage(tagName): Promise<void>
+    -decrementUsage(tagName): Promise<void>
+}
+
+class TagRepository {
+    +findByName(name: string): Promise<Tag | null>
+    +findByPrefix(prefix: string, limit: number): Promise<Tag[]>
+    +findAll(): Promise<Tag[]>
+    +insert(tag: Tag): Promise<Tag>
+    +incrementUsageCount(name: string): Promise<void>
+    +decrementUsageCount(name: string): Promise<void>
+    +remove(name: string): Promise<void>
+}
+
+class AdrRepository {
+    +addTag(adrId: string, tagName: string): Promise<void>
+    +removeTag(adrId: string, tagName: string): Promise<void>
+    +getAdrTags(adrId: string): Promise<string[]>
+}
+
+class Tag <<Document>> {
+    +type: "tag"
+    +name: string
+    +slug: string
+    +tenantSlug: string
+    +usageCount: number
+    +createdAt: string
+    +createdBy: string
+}
+
+class TagSuggestion {
+    +name: string
+    +usageCount: number
+}
+
+class TenantScopedRepository<T> {
+    #tenantContext: TenantContext
+    #collection: Collection
+}
+
+TagController --> TagService
+TagController --> AuthorizationGuard
+TagService --> TagRepository
+TagService --> AdrRepository
+TagRepository --|> TenantScopedRepository
+TagService ..> Tag : creates
+TagService ..> TagSuggestion : returns
+
+class AuthorizationGuard {
+    +requireRole(...roles: Role[]): Middleware
+}
+
+@enduml

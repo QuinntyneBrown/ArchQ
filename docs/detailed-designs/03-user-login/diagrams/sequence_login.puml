@@ -1,0 +1,112 @@
+@startuml sequence_login
+title Sequence Diagram — User Login
+
+actor "User" as Client
+participant "AuthController" as Ctrl
+participant "AuthenticationService" as Auth
+participant "GlobalUserRepository" as GRepo
+participant "UserRepository" as URepo
+participant "LockoutService" as Lock
+participant "PasswordHasher" as Hash
+participant "TokenService" as Token
+participant "RefreshTokenRepository" as RRepo
+participant "AuditService" as Audit
+database "Couchbase" as DB
+
+Client -> Ctrl : POST /api/auth/login\n{ email, password }
+activate Ctrl
+
+Ctrl -> Auth : login({ email, password })
+activate Auth
+
+Auth -> GRepo : findByEmail("jane@example.com")
+activate GRepo
+GRepo -> DB : GET guser::{email-hash}\nFROM _system.global_users
+DB --> GRepo : GlobalUser { memberships: [...] }
+GRepo --> Auth : globalUser
+deactivate GRepo
+
+alt No global user found
+    Auth --> Ctrl : throw InvalidCredentialsError
+    Ctrl --> Client : 401 { error: "INVALID_CREDENTIALS" }
+end
+
+Auth -> Auth : selectTenant(memberships)\n(auto-select for single org)
+
+Auth -> URepo : findById(userId)
+activate URepo
+note right: UserRepository scoped\nto selected tenant
+URepo -> DB : GET user::{userId}\nFROM acme-corp.users
+DB --> URepo : User document
+URepo --> Auth : user
+deactivate URepo
+
+Auth -> Lock : isLocked(userId, "acme-corp")
+activate Lock
+Lock --> Auth : false
+deactivate Lock
+
+alt Account is locked
+    Auth -> Audit : record({ action: "LOGIN_BLOCKED_LOCKED" })
+    Auth --> Ctrl : throw AccountLockedError
+    Ctrl --> Client : 401 { error: "ACCOUNT_LOCKED" }
+end
+
+Auth -> Hash : verify("S3cur3P@ss!", user.passwordHash)
+activate Hash
+Hash --> Auth : true
+deactivate Hash
+
+alt Password mismatch
+    Auth -> Lock : recordFailedAttempt(userId, "acme-corp")
+    activate Lock
+    Lock -> DB : UPDATE user failedLoginAttempts++
+    alt Lockout threshold reached
+        Lock -> Lock : Set lockedUntil = now + 15min
+        Lock -> Lock : sendLockoutNotification(user)
+    end
+    Lock --> Auth : LockoutStatus
+    deactivate Lock
+    Auth -> Audit : record({ action: "LOGIN_FAILED" })
+    Auth --> Ctrl : throw InvalidCredentialsError
+    Ctrl --> Client : 401 { error: "INVALID_CREDENTIALS" }
+end
+
+Auth -> Lock : resetAttempts(userId, "acme-corp")
+activate Lock
+Lock -> DB : UPDATE user failedLoginAttempts=0
+Lock --> Auth : OK
+deactivate Lock
+
+Auth -> Token : createAccessToken({ sub, email,\ntenant_id, tenant_slug, roles })
+activate Token
+Token --> Auth : accessToken (JWT, 15min)
+deactivate Token
+
+Auth -> Token : createRefreshToken({ sub, family, jti })
+activate Token
+Token --> Auth : refreshToken (JWT, 7d)
+deactivate Token
+
+Auth -> RRepo : store(refreshTokenDoc)
+activate RRepo
+RRepo -> DB : UPSERT rtoken::{hash}\nINTO _system.refresh_tokens
+RRepo --> Auth : OK
+deactivate RRepo
+
+Auth -> URepo : update({ lastLoginAt: now })
+
+Auth -> Audit : record({ action: "LOGIN_SUCCESS" })
+activate Audit
+Audit --> Auth : OK
+deactivate Audit
+
+Auth --> Ctrl : LoginResult
+deactivate Auth
+
+Ctrl -> Ctrl : setCookies(res, accessToken, refreshToken)\nHttpOnly, Secure, SameSite=Strict
+
+Ctrl --> Client : 200 OK\nSet-Cookie: archq_access=...\nSet-Cookie: archq_refresh=...\n{ user, tenant, memberships }
+deactivate Ctrl
+
+@enduml

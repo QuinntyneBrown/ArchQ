@@ -1,0 +1,35 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram — ADR Search (Feature 09)
+
+Person(user, "Any Authenticated User", "Searches ADRs by keyword across titles, body, and tags")
+
+Container_Boundary(spa, "Frontend SPA") {
+    Component(searchBar, "SearchBar", "React Component", "Input/Search component with debounced input, keyboard shortcut (Cmd/Ctrl+K)")
+    Component(searchResults, "SearchResultsList", "React Component", "Displays ranked results: ADR number, title, status badge, match snippet")
+    Component(searchClientService, "SearchClientService", "TypeScript Service", "HTTP client for search API calls")
+    Component(adrListPage, "AdrListPage", "React Component", "Integrates search bar within the filter row")
+}
+
+Container_Boundary(api, "API Server") {
+    Component(searchController, "SearchController", "NestJS Controller", "GET /search — accepts query, returns ranked results")
+    Component(searchService, "SearchService", "NestJS Service", "Builds FTS query with tenant scope partition, processes results with snippet extraction")
+    Component(ftsClient, "CouchbaseFtsClient", "Service", "Executes Full-Text Search queries against Couchbase FTS index")
+    Component(tenantContext, "TenantContext", "Middleware", "Extracts tenant slug from JWT")
+}
+
+ContainerDb(couchbase, "Couchbase", "archq bucket", "FTS index on adrs collection: title, body, tags fields")
+
+user --> adrListPage
+adrListPage --> searchBar
+searchBar --> searchResults
+searchBar --> searchClientService
+
+searchClientService --> searchController : "GET /api/tenants/:slug/search?q=..."
+searchController --> tenantContext
+searchController --> searchService
+searchService --> ftsClient
+ftsClient --> couchbase : "FTS query with\nscope partition"
+
+@enduml

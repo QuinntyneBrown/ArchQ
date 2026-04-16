@@ -1,0 +1,28 @@
+@startuml c4_component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 Component Diagram — Threaded Comments
+
+Person(user, "Author / Reviewer / Admin", "Posts and replies to comments on ADRs")
+
+System_Boundary(api, "ArchQ API Service") {
+    Component(ctrl, "CommentController", "Express Router", "Handles HTTP requests for comment CRUD")
+    Component(authGuard, "AuthorizationGuard", "Middleware", "Validates caller role: Author, Reviewer, Admin")
+    Component(svc, "CommentService", "Service", "Orchestrates comment creation, editing, threading, edit-window enforcement")
+    Component(sanitizer, "MarkdownSanitizer", "Utility", "Strips XSS vectors from Markdown input")
+    Component(repo, "CommentRepository", "TenantScopedRepository", "Persists and queries comments in tenant-scoped collection")
+    Component(auditSvc, "AuditService", "Service", "Records immutable audit entries")
+}
+
+ContainerDb(cb, "Couchbase", "comments collection", "Stores comment documents per tenant scope")
+
+Rel(user, ctrl, "POST/GET/PUT/DELETE comments", "HTTPS / JSON")
+Rel(ctrl, authGuard, "Checks role")
+Rel(ctrl, svc, "Delegates business logic")
+Rel(svc, sanitizer, "Sanitizes Markdown body")
+Rel(svc, repo, "Reads/writes comments")
+Rel(svc, auditSvc, "Records audit entries")
+Rel(repo, cb, "N1QL queries / KV ops", "Couchbase SDK")
+
+SHOW_LEGEND()
+@enduml

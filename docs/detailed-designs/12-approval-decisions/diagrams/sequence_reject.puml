@@ -1,0 +1,63 @@
+@startuml sequence_reject
+title Sequence — Reject ADR (Any Rejection -> Auto-Rejected)
+
+actor Approver as "Approver (R2)"
+participant "ApprovalController" as ctrl
+participant "TenantContext" as tenant
+participant "ApprovalService" as appSvc
+participant "AdrRepository" as adrRepo
+participant "ConfigRepository" as configRepo
+participant "WorkflowService" as wfSvc
+participant "AuditRepository" as auditRepo
+participant "NotificationService" as notifSvc
+database "Couchbase\n{tenant}.adrs" as cb_adrs
+database "Couchbase\n{tenant}.config" as cb_config
+database "Couchbase\n{tenant}.audit" as cb_audit
+
+Approver -> ctrl : POST /api/adrs/adr-005/decisions\n{ decision: "rejected",\n  comment: "Insufficient cost analysis." }
+ctrl -> tenant : getTenantSlug()
+tenant --> ctrl : "acme-corp"
+ctrl -> appSvc : recordDecision("adr-005", "R2", request)
+
+appSvc -> adrRepo : findById("adr-005")
+adrRepo -> cb_adrs : KV GET "adr-005"
+cb_adrs --> adrRepo : AdrDocument\n(status=InReview, cas=100,\napprovers: [{R1,approved},{R2,pending}])
+adrRepo --> appSvc : AdrDocument
+
+appSvc -> appSvc : findApproverEntry(adr, "R2")
+note right: Found: {userId:"R2", status:"pending"}
+
+appSvc -> appSvc : validateNoDuplicate(entry)
+note right: status=="pending" -> OK
+
+appSvc -> appSvc : Update entry:\nstatus="rejected"\ncomment="Insufficient cost analysis."\ndecidedAt=now()
+
+appSvc -> appSvc : evaluateThreshold(adr, "acme-corp")
+appSvc -> configRepo : getApprovalThreshold()
+configRepo -> cb_config : N1QL SELECT approvalThreshold
+cb_config --> configRepo : { approvalThreshold: 2 }
+configRepo --> appSvc : 2
+
+appSvc -> appSvc : Check rejections: 1 (R2)\nAny rejection => REJECTED
+note right #Pink: Immediate rejection\n(any single reject\ntriggers transition)
+
+appSvc -> wfSvc : transition(adr, Rejected)
+wfSvc -> wfSvc : adr.status = Rejected
+wfSvc -> adrRepo : save(adr, cas=100)
+adrRepo -> cb_adrs : KV REPLACE "adr-005" (CAS=100)
+cb_adrs --> adrRepo : success (cas=300)
+adrRepo --> wfSvc : updated AdrDocument
+
+wfSvc -> auditRepo : append({action:"status_transition",\nfrom:"InReview", to:"Rejected",\nrejectedBy:"R2",\nreason:"Insufficient cost analysis."})
+auditRepo -> cb_audit : KV INSERT
+cb_audit --> auditRepo : success
+
+wfSvc -> notifSvc : notifyTransition(adr, InReview, Rejected)
+notifSvc -> notifSvc : Send to author:\n"ADR-005 has been rejected.\nReason: Insufficient cost analysis."
+notifSvc --> wfSvc : done
+
+wfSvc --> appSvc : updated AdrDocument
+appSvc --> ctrl : updated AdrDocument
+ctrl --> Approver : 200 OK\n{ status: "Rejected",\n  approvers: [{R1,approved},{R2,rejected}] }
+
+@enduml
