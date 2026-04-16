@@ -39,6 +39,7 @@
 
 .sidebar-nav-section {
   margin-bottom: 1.5rem;
+  flex: 1;
 }
 
 .nav-section-label {
@@ -80,6 +81,11 @@
   }
 }
 
+.sidebar-footer {
+  border-top: 1px solid #2E3142;
+  padding-top: 1rem;
+}
+
 .sidebar-overlay {
   display: none;
 }
@@ -91,14 +97,7 @@
 }
 
 .app-toolbar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  z-index: 1000;
-  padding: 0.75rem 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  display: none;
 }
 
 .hamburger-button {
@@ -117,7 +116,11 @@
 }
 
 .logout-button {
-  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
   background-color: transparent;
   color: #9ca3af;
   border: 1px solid #2E3142;
@@ -157,15 +160,18 @@
     z-index: 1999;
   }
 
-  .hamburger-button {
+  .app-toolbar {
     display: flex;
     position: fixed;
-    top: 0.75rem;
-    left: 0.75rem;
+    top: 0;
+    left: 0;
     z-index: 1000;
+    padding: 0.75rem 1rem;
+    align-items: center;
+    gap: 0.5rem;
   }
 
-  .app-toolbar {
-    right: 0;
+  .hamburger-button {
+    display: flex;
   }
 }

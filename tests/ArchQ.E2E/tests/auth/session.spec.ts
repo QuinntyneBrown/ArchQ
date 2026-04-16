@@ -28,6 +28,12 @@ test.describe('Session Management', () => {
     await page.locator('[data-testid="sign-in-button"]').click();
     await expect(page).toHaveURL(/\/adrs/);
 
+    // Open sidebar on mobile/tablet if hamburger menu is visible
+    const hamburger = page.locator('[data-testid="hamburger-menu"]');
+    if (await hamburger.isVisible()) {
+      await hamburger.click();
+    }
+
     // Click logout
     await page.locator('[data-testid="logout-button"]').click();
 
