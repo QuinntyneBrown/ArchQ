@@ -346,7 +346,7 @@
 }
 .search-result-title ::ng-deep mark,
 .search-result-snippet ::ng-deep mark {
-  background-color: rgba(37, 99, 235, 0.3);
+  background-color: rgba(0, 98, 255, 0.3);
   color: #93c5fd;
   padding: 0 0.125rem;
   border-radius: 0.125rem;
@@ -387,7 +387,7 @@
   text-decoration: none;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 98, 255, 0.4);
   transition: background-color 0.15s ease;
   z-index: 10;
 }
