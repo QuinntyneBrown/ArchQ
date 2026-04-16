@@ -117,7 +117,7 @@ export class AdrEditorComponent implements OnInit {
         next: (resp) => {
           this.saving.set(false);
           this.toastService.show('ADR updated successfully', 'success');
-          this.router.navigate(['/adrs', resp.id]);
+          this.router.navigate(['/adrs', resp.id, 'edit']);
         },
         error: () => {
           this.saving.set(false);
@@ -132,7 +132,7 @@ export class AdrEditorComponent implements OnInit {
         next: (adr) => {
           this.saving.set(false);
           this.toastService.show('ADR draft saved successfully', 'success');
-          this.router.navigate(['/adrs', adr.id]);
+          this.router.navigate(['/adrs', adr.id, 'edit']);
         },
         error: () => {
           this.saving.set(false);
