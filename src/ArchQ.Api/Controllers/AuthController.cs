@@ -130,7 +130,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = isSecure,
             SameSite = SameSiteMode.Strict,
-            Path = "/api/auth/refresh",
+            Path = "/api",
             MaxAge = TimeSpan.FromDays(7)
         });
     }
@@ -152,7 +152,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = isSecure,
             SameSite = SameSiteMode.Strict,
-            Path = "/api/auth/refresh"
+            Path = "/api"
         });
     }
 }

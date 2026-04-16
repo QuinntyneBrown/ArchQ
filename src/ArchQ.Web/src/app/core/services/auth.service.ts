@@ -89,4 +89,12 @@ export class AuthService {
   getCurrentUser(): UserInfo | null {
     return this._currentUser();
   }
+
+  updateTenant(tenant: TenantInfo): void {
+    this._currentTenant.set(tenant);
+  }
+
+  updateMemberships(memberships: MembershipInfo[]): void {
+    this._memberships.set(memberships);
+  }
 }

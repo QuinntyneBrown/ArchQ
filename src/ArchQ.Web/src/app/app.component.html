@@ -1,13 +1,27 @@
 <app-toast></app-toast>
 @if (authService.isLoggedIn()) {
-  <div class="app-toolbar">
-    <button
-      class="logout-button"
-      data-testid="logout-button"
-      (click)="onLogout()"
-    >
-      Logout
-    </button>
+  <div class="app-layout">
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <span class="logo-text">ArchQ</span>
+      </div>
+      <div class="sidebar-org">
+        <app-org-switcher></app-org-switcher>
+      </div>
+    </aside>
+    <div class="app-main">
+      <div class="app-toolbar">
+        <button
+          class="logout-button"
+          data-testid="logout-button"
+          (click)="onLogout()"
+        >
+          Logout
+        </button>
+      </div>
+      <router-outlet />
+    </div>
   </div>
+} @else {
+  <router-outlet />
 }
-<router-outlet />
