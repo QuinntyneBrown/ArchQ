@@ -2,7 +2,7 @@
 
 | # | Feature | Status | Traces To | Description |
 |---|---------|--------|-----------|-------------|
-| 01 | [Tenant Provisioning](01-tenant-provisioning/README.md) | Draft | L2-001, L2-002 | Create organizations with Couchbase scope isolation |
+| 01 | [Tenant Provisioning](01-tenant-provisioning/README.md) | Complete | L2-001, L2-002 | Create organizations with Couchbase scope isolation |
 | 02 | [User Registration](02-user-registration/README.md) | Draft | L2-003 | Register with email/password, email verification, bcrypt hashing |
 | 03 | [User Login & Session](03-user-login/README.md) | Draft | L2-003, L2-025 | Authenticate, JWT access/refresh tokens, account lockout |
 | 04 | [Organization Switching](04-organization-switching/README.md) | Draft | L2-004, L2-002 | Switch active tenant, scoped session context |
