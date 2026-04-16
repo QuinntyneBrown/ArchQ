@@ -1,6 +1,7 @@
 using ArchQ.Core.Entities;
 using ArchQ.Core.Interfaces;
 using Couchbase.Core.Exceptions.KeyValue;
+using Couchbase.KeyValue;
 using Couchbase.Query;
 
 namespace ArchQ.Infrastructure.Persistence.Repositories;
@@ -54,6 +55,28 @@ public class AdrRepository : IAdrRepository
         {
             return null;
         }
+    }
+
+    public async Task<Adr> UpdateAsync(Adr adr, string tenantSlug)
+    {
+        var collection = await _context.GetCollectionAsync(tenantSlug, CollectionName);
+
+        for (int attempt = 0; attempt <= MaxCasRetries; attempt++)
+        {
+            try
+            {
+                var getResult = await collection.GetAsync(DocKey(adr.Id));
+                var cas = getResult.Cas;
+                await collection.ReplaceAsync(DocKey(adr.Id), adr, new Couchbase.KeyValue.ReplaceOptions().Cas(cas));
+                return adr;
+            }
+            catch (DocumentExistsException) when (attempt < MaxCasRetries)
+            {
+                // Retry on CAS conflict
+            }
+        }
+
+        throw new InvalidOperationException("Failed to update ADR after maximum CAS retries.");
     }
 
     public async Task<int> GetMaxAdrNumberAsync(string tenantSlug)

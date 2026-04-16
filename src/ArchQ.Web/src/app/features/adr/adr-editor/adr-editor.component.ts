@@ -1,11 +1,12 @@
 import { Component, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { AdrService } from '../../../core/services/adr.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
+import { AdrDetailResponse } from '../../../core/models/adr.model';
 
 @Component({
   selector: 'app-adr-editor',
@@ -13,6 +14,12 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
   imports: [FormsModule, RouterLink],
   template: `
     <div class="editor-container">
+      @if (readOnly()) {
+        <div class="readonly-banner" data-testid="readonly-banner">
+          This ADR is in "{{ existingAdr()?.status }}" status and cannot be edited.
+        </div>
+      }
+
       <!-- Top Bar -->
       <div class="top-bar">
         <div class="top-bar-left">
@@ -22,17 +29,17 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
               <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
           </a>
-          <span class="top-bar-title">New ADR</span>
-          <span class="status-badge" data-testid="status-badge">Draft</span>
+          <span class="top-bar-title">{{ editMode() ? 'Edit ADR' : 'New ADR' }}</span>
+          <span class="status-badge" data-testid="status-badge">{{ existingAdr()?.status || 'Draft' }}</span>
         </div>
         <div class="top-bar-right">
           <button
             class="btn-save"
             data-testid="save-draft-button"
-            [disabled]="saving()"
+            [disabled]="saving() || readOnly()"
             (click)="saveDraft()"
           >
-            {{ saving() ? 'Saving...' : 'Save Draft' }}
+            {{ saving() ? 'Saving...' : (editMode() ? 'Save Changes' : 'Save Draft') }}
           </button>
           <button class="btn-submit" disabled>Submit for Review</button>
           <a routerLink="/adrs" class="cancel-link" data-testid="cancel-button">Cancel</a>
@@ -126,6 +133,17 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+    }
+
+    /* Read-only Banner */
+    .readonly-banner {
+      padding: 0.75rem 1.5rem;
+      background-color: rgba(239, 68, 68, 0.1);
+      border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: center;
     }
 
     /* Top Bar */
@@ -402,6 +420,14 @@ export class AdrEditorComponent implements OnInit {
 
   readonly saving = signal(false);
   readonly activeTab = signal<'edit' | 'preview'>('edit');
+  readonly editMode = signal(false);
+  readonly existingAdr = signal<AdrDetailResponse | null>(null);
+  readonly readOnly = computed(() => {
+    const adr = this.existingAdr();
+    if (!adr) return false;
+    const terminalStatuses = ['accepted', 'rejected', 'superseded', 'deprecated'];
+    return terminalStatuses.includes(adr.status);
+  });
 
   readonly renderedHtml = computed(() => {
     try {
@@ -416,12 +442,30 @@ export class AdrEditorComponent implements OnInit {
     private readonly adrService: AdrService,
     private readonly authService: AuthService,
     private readonly toastService: ToastService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    const adrId = this.route.snapshot.paramMap.get('id');
     const tenant = this.authService.currentTenant();
-    if (tenant) {
+
+    if (adrId && tenant) {
+      // Edit mode — load existing ADR
+      this.editMode.set(true);
+      this.adrService.getAdr(tenant.slug, adrId).subscribe({
+        next: (adr) => {
+          this.existingAdr.set(adr);
+          this.title = adr.title;
+          this.content = adr.body;
+        },
+        error: () => {
+          this.toastService.show('Failed to load ADR', 'error');
+          this.router.navigate(['/adrs']);
+        }
+      });
+    } else if (tenant) {
+      // Create mode — load template
       this.adrService.getTemplate(tenant.slug).subscribe({
         next: (resp) => {
           this.content = resp.body;
@@ -436,6 +480,8 @@ export class AdrEditorComponent implements OnInit {
   }
 
   saveDraft(): void {
+    if (this.readOnly()) return;
+
     if (!this.title.trim()) {
       this.toastService.show('ADR title is required', 'error');
       return;
@@ -455,20 +501,39 @@ export class AdrEditorComponent implements OnInit {
 
     this.saving.set(true);
 
-    this.adrService.createAdr(tenant.slug, {
-      title: this.title,
-      body: this.content
-    }).subscribe({
-      next: (adr) => {
-        this.saving.set(false);
-        this.toastService.show('ADR draft saved successfully', 'success');
-        this.router.navigate(['/adrs', adr.id]);
-      },
-      error: () => {
-        this.saving.set(false);
-        this.toastService.show('Failed to save ADR draft', 'error');
-      }
-    });
+    if (this.editMode() && this.existingAdr()) {
+      const adr = this.existingAdr()!;
+      this.adrService.updateAdr(tenant.slug, adr.id, {
+        title: this.title,
+        body: this.content,
+        tags: adr.tags
+      }).subscribe({
+        next: (resp) => {
+          this.saving.set(false);
+          this.toastService.show('ADR updated successfully', 'success');
+          this.router.navigate(['/adrs', resp.id]);
+        },
+        error: () => {
+          this.saving.set(false);
+          this.toastService.show('Failed to update ADR', 'error');
+        }
+      });
+    } else {
+      this.adrService.createAdr(tenant.slug, {
+        title: this.title,
+        body: this.content
+      }).subscribe({
+        next: (adr) => {
+          this.saving.set(false);
+          this.toastService.show('ADR draft saved successfully', 'success');
+          this.router.navigate(['/adrs', adr.id]);
+        },
+        error: () => {
+          this.saving.set(false);
+          this.toastService.show('Failed to save ADR draft', 'error');
+        }
+      });
+    }
   }
 
   insertMarkdown(type: string): void {

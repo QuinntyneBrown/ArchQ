@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AdrResponse, CreateAdrRequest, TemplateResponse } from '../models/adr.model';
+import { AdrResponse, AdrDetailResponse, CreateAdrRequest, UpdateAdrRequest, UpdateAdrResponse, TemplateResponse } from '../models/adr.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdrService {
@@ -11,6 +11,14 @@ export class AdrService {
 
   createAdr(tenantSlug: string, data: CreateAdrRequest): Observable<AdrResponse> {
     return this.http.post<AdrResponse>(`${this.API_URL}/${tenantSlug}/adrs`, data, { withCredentials: true });
+  }
+
+  getAdr(tenantSlug: string, adrId: string): Observable<AdrDetailResponse> {
+    return this.http.get<AdrDetailResponse>(`${this.API_URL}/${tenantSlug}/adrs/${adrId}`, { withCredentials: true });
+  }
+
+  updateAdr(tenantSlug: string, adrId: string, data: UpdateAdrRequest): Observable<UpdateAdrResponse> {
+    return this.http.put<UpdateAdrResponse>(`${this.API_URL}/${tenantSlug}/adrs/${adrId}`, data, { withCredentials: true });
   }
 
   getTemplate(tenantSlug: string): Observable<TemplateResponse> {

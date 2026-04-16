@@ -15,5 +15,6 @@ export const routes: Routes = [
   { path: 'tenants/:id', component: TenantDetailComponent },
   { path: 'adrs', component: AdrListComponent },
   { path: 'adrs/new', component: AdrEditorComponent },
+  { path: 'adrs/:id/edit', component: AdrEditorComponent },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 ];
