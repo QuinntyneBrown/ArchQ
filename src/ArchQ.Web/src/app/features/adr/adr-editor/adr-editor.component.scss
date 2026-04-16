@@ -175,6 +175,9 @@
   flex: 1;
   display: flex;
   min-height: 0;
+  border-radius: 0.5rem;
+  border: 1px solid #2E3142;
+  overflow: hidden;
 }
 .editor-pane {
   flex: 1;
