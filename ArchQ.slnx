@@ -8,5 +8,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/ArchQ.IntegrationTests/ArchQ.IntegrationTests.csproj" />
     <Project Path="tests/ArchQ.UnitTests/ArchQ.UnitTests.csproj" />
+    <Project Path="tests/ArchQ.PerformanceTests/ArchQ.PerformanceTests.csproj" />
   </Folder>
 </Solution>
