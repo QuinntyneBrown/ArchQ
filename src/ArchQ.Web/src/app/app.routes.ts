@@ -4,6 +4,8 @@ import { TenantDetailComponent } from './features/settings/tenant-detail/tenant-
 import { RegisterComponent } from './features/auth/register/register.component';
 import { VerifyEmailComponent } from './features/auth/verify-email/verify-email.component';
 import { LoginComponent } from './features/auth/login/login.component';
+import { AdrListComponent } from './features/dashboard/adr-list/adr-list.component';
+import { AdrEditorComponent } from './features/adr/adr-editor/adr-editor.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -11,6 +13,7 @@ export const routes: Routes = [
   { path: 'verify-email', component: VerifyEmailComponent },
   { path: 'tenants/new', component: TenantCreateComponent },
   { path: 'tenants/:id', component: TenantDetailComponent },
-  { path: 'adrs', children: [] },
+  { path: 'adrs', component: AdrListComponent },
+  { path: 'adrs/new', component: AdrEditorComponent },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 ];

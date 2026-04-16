@@ -30,6 +30,8 @@ public static class DependencyInjection
         services.AddSingleton<ITokenService, TokenService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IEmailService, SmtpEmailService>();
+        services.AddScoped<IAdrRepository, AdrRepository>();
+        services.AddScoped<IConfigRepository, ConfigRepository>();
 
         return services;
     }
