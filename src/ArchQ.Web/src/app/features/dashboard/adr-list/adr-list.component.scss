@@ -61,7 +61,7 @@
   left: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #6b7280;
+  color: #5C5F6E;
   pointer-events: none;
 }
 .search-input {
@@ -76,7 +76,7 @@
   box-sizing: border-box;
   transition: border-color 0.15s ease;
 }
-.search-input::placeholder { color: #6b7280; }
+.search-input::placeholder { color: #5C5F6E; }
 .search-input:focus { border-color: #0062FF; }
 .status-filter {
   padding: 0.5rem 0.75rem;
@@ -130,7 +130,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6b7280;
+  color: #5C5F6E;
   border-bottom: 1px solid #2E3142;
 }
 .adr-table td {
@@ -275,7 +275,7 @@
   font-size: 0.8125rem;
 }
 .card-date {
-  color: #6b7280;
+  color: #5C5F6E;
   font-size: 0.75rem;
 }
 
@@ -308,7 +308,7 @@
   cursor: not-allowed;
 }
 .total-count {
-  color: #6b7280;
+  color: #5C5F6E;
   font-size: 0.8125rem;
 }
 

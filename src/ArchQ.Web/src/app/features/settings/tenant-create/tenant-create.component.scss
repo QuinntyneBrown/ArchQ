@@ -36,7 +36,7 @@ input {
   transition: border-color 0.15s ease;
 }
 input::placeholder {
-  color: #6b7280;
+  color: #5C5F6E;
 }
 input:focus {
   border-color: #0062FF;
@@ -44,7 +44,7 @@ input:focus {
 .slug-preview {
   margin-top: 0.25rem;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #5C5F6E;
 }
 .field-error {
   margin-top: 0.25rem;
@@ -94,7 +94,7 @@ input:focus {
   transition: border-color 0.15s ease;
 }
 .btn-secondary:hover {
-  border-color: #6b7280;
+  border-color: #5C5F6E;
 }
 @media (max-width: 640px) {
   .tenant-create-container {

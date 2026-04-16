@@ -114,7 +114,7 @@
   outline: none;
   transition: border-color 0.15s ease;
 }
-.title-input::placeholder { color: #6b7280; }
+.title-input::placeholder { color: #5C5F6E; }
 .title-input:focus { border-color: #0062FF; }
 
 /* Mobile Tabs */
@@ -165,7 +165,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6b7280;
+  color: #5C5F6E;
   border-bottom: 1px solid #2E3142;
   background-color: #242736;
 }
@@ -221,7 +221,7 @@
   background-color: #1e2030;
   box-sizing: border-box;
 }
-.markdown-editor::placeholder { color: #6b7280; }
+.markdown-editor::placeholder { color: #5C5F6E; }
 
 /* Markdown rendered content */
 .markdown-body :first-child { margin-top: 0; }
