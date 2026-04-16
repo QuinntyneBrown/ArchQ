@@ -1,0 +1,47 @@
+name: Deploy API to Azure App Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/ArchQ.Core/**'
+      - 'src/ArchQ.Application/**'
+      - 'src/ArchQ.Infrastructure/**'
+      - 'src/ArchQ.Api/**'
+      - 'ArchQ.slnx'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  API_PROJECT: src/ArchQ.Api/ArchQ.Api.csproj
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-api-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.API_PROJECT }}
+
+      - name: Build
+        run: dotnet build ${{ env.API_PROJECT }} --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish ${{ env.API_PROJECT }} --configuration Release --no-build --output ./publish
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish

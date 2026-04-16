@@ -61,3 +61,6 @@ appsettings.*.local.json
 
 ## Docker
 couchbase-data/
+
+## Azure provisioning (local state)
+.azure/
