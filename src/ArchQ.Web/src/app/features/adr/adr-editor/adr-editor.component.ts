@@ -19,7 +19,10 @@ export class AdrEditorComponent implements OnInit {
   @ViewChild('editorTextarea') editorTextarea!: ElementRef<HTMLTextAreaElement>;
 
   title = '';
-  content = '';
+  readonly contentSignal = signal('');
+
+  get content(): string { return this.contentSignal(); }
+  set content(value: string) { this.contentSignal.set(value); }
 
   readonly saving = signal(false);
   readonly activeTab = signal<'edit' | 'preview'>('edit');
@@ -34,7 +37,7 @@ export class AdrEditorComponent implements OnInit {
 
   readonly renderedHtml = computed(() => {
     try {
-      const raw = marked.parse(this.content || '', { async: false }) as string;
+      const raw = marked.parse(this.contentSignal() || '', { async: false }) as string;
       return DOMPurify.sanitize(raw);
     } catch {
       return '';
