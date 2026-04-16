@@ -17,7 +17,7 @@ public class AuditRepository : IAuditRepository
     public async Task WriteEntryAsync(AuditEntry entry)
     {
         var collection = await _context.GetCollectionAsync(ScopeName, CollectionName);
-        var key = $"audit::{entry.Id}";
+        var key = $"audit::{entry.Timestamp:yyyyMMddHHmmss}::{entry.Id}";
         await collection.InsertAsync(key, entry);
     }
 }

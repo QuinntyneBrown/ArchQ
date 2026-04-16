@@ -26,7 +26,7 @@ public class CreateTenantCommandHandler : IRequestHandler<CreateTenantCommand, T
     {
         if (await _tenantRepository.SlugExistsAsync(request.Slug))
         {
-            throw new ConflictException("SLUG_CONFLICT", $"A tenant with slug '{request.Slug}' already exists.");
+            throw new ConflictException("SLUG_CONFLICT", $"The organization slug '{request.Slug}' is already in use.");
         }
 
         await _couchbaseProvisioner.ProvisionScopeAsync(request.Slug);
@@ -39,6 +39,7 @@ public class CreateTenantCommandHandler : IRequestHandler<CreateTenantCommand, T
             Slug = request.Slug,
             Status = "active",
             Plan = "standard",
+            CreatedBy = request.CreatedBy,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             Settings = new TenantSettings()

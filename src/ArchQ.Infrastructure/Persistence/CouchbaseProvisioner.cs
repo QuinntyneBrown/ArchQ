@@ -65,9 +65,27 @@ public class CouchbaseProvisioner : ICouchbaseProvisioner
         var bucket = await _context.GetBucketAsync();
         var scope = bucket.Scope(slug);
 
+        // Primary indexes on all collections
         foreach (var name in CollectionNames)
         {
             var query = $"CREATE PRIMARY INDEX IF NOT EXISTS ON `{name}`";
+            await scope.QueryAsync<dynamic>(query, new QueryOptions());
+        }
+
+        // Secondary indexes per collection
+        var secondaryIndexes = new (string Collection, string IndexName, string Field)[]
+        {
+            ("users", "idx_users_email", "email"),
+            ("adrs", "idx_adrs_status", "status"),
+            ("adrs", "idx_adrs_createdAt", "createdAt"),
+            ("tags", "idx_tags_name", "name"),
+            ("audit", "idx_audit_timestamp", "timestamp"),
+            ("comments", "idx_comments_adrId", "adrId"),
+        };
+
+        foreach (var (collection, indexName, field) in secondaryIndexes)
+        {
+            var query = $"CREATE INDEX `{indexName}` IF NOT EXISTS ON `{collection}`(`{field}`)";
             await scope.QueryAsync<dynamic>(query, new QueryOptions());
         }
     }

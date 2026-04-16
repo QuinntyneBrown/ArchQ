@@ -68,6 +68,24 @@ public class TenantRepository : ITenantRepository
         return tenant;
     }
 
+    public async Task SoftDeleteAsync(string id)
+    {
+        var collection = await GetCollectionAsync();
+        try
+        {
+            var result = await collection.GetAsync(DocKey(id));
+            var tenant = result.ContentAs<Tenant>()
+                ?? throw new Couchbase.Core.Exceptions.KeyValue.DocumentNotFoundException();
+            tenant.Status = "deleted";
+            tenant.UpdatedAt = DateTime.UtcNow;
+            await collection.ReplaceAsync(DocKey(id), tenant);
+        }
+        catch (Couchbase.Core.Exceptions.KeyValue.DocumentNotFoundException)
+        {
+            throw;
+        }
+    }
+
     public async Task<bool> SlugExistsAsync(string slug)
     {
         var scope = await _context.GetScopeAsync(ScopeName);

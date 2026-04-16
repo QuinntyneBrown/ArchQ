@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
         services.AddScoped<ICouchbaseProvisioner, CouchbaseProvisioner>();
+        services.AddSingleton<CouchbaseBootstrapper>();
         services.AddScoped<ITenantContext, TenantContext>();
 
         return services;

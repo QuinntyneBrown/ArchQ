@@ -31,7 +31,7 @@ public class ExceptionHandlingMiddleware
     {
         var (statusCode, error, message) = exception switch
         {
-            NotFoundException ex => (StatusCodes.Status404NotFound, "NOT_FOUND", ex.Message),
+            NotFoundException ex => (StatusCodes.Status404NotFound, ex.Code, ex.Message),
             ConflictException ex => (StatusCodes.Status409Conflict, ex.Code, ex.Message),
             ValidationException ex => (StatusCodes.Status400BadRequest, "VALIDATION_ERROR", ex.Errors.FirstOrDefault()?.ErrorMessage ?? ex.Message),
             DomainException ex => (StatusCodes.Status400BadRequest, ex.Code, ex.Message),

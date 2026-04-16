@@ -9,4 +9,5 @@ public interface ITenantRepository
     Task<Tenant> CreateAsync(Tenant tenant);
     Task<Tenant> UpdateAsync(Tenant tenant);
     Task<bool> SlugExistsAsync(string slug);
+    Task SoftDeleteAsync(string id);
 }

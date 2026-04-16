@@ -1,6 +1,7 @@
 using ArchQ.Api.Middleware;
 using ArchQ.Application;
 using ArchQ.Infrastructure;
+using ArchQ.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,10 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Bootstrap _system scope and its collections on startup
+var bootstrapper = app.Services.GetRequiredService<CouchbaseBootstrapper>();
+await bootstrapper.EnsureSystemScopeAsync();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors();

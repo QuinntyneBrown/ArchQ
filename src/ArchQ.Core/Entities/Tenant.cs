@@ -5,6 +5,7 @@ public class Tenant
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string DisplayName { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
+    public string Type { get; set; } = "tenant";
     public string Status { get; set; } = "active";
     public string Plan { get; set; } = "standard";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
