@@ -10,4 +10,5 @@ public interface IUserRepository
     Task<User> UpdateAsync(User user, string tenantSlug);
     Task<int> CountByRoleAsync(string role, string tenantSlug);
     Task<Dictionary<string, User>> GetByIdsAsync(List<string> ids, string tenantSlug);
+    Task<List<User>> ListByRoleAsync(string role, string tenantSlug);
 }

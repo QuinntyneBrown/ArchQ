@@ -54,7 +54,15 @@ public class ExceptionHandlingMiddleware
 
         object body;
 
-        if (exception is ValidationException validationException)
+        if (exception is ValidationFailedException validationFailedException && validationFailedException.Details.Count > 0)
+        {
+            var details = validationFailedException.Details
+                .Select(e => new { field = e.Field, rule = e.Rule, message = e.Message })
+                .ToArray();
+
+            body = new { error, message, details };
+        }
+        else if (exception is ValidationException validationException)
         {
             var details = validationException.Errors
                 .Select(e => new { field = e.PropertyName, message = e.ErrorMessage })

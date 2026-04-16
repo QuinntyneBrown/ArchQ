@@ -1,6 +1,7 @@
 using ArchQ.Core.Entities;
 using ArchQ.Core.Exceptions;
 using ArchQ.Core.Interfaces;
+using ArchQ.Core.Validation;
 using ArchQ.Core.Workflow;
 using MediatR;
 
@@ -10,11 +11,13 @@ public class TransitionAdrCommandHandler : IRequestHandler<TransitionAdrCommand,
 {
     private readonly IAdrRepository _adrRepository;
     private readonly IAuditRepository _auditRepository;
+    private readonly IUserRepository _userRepository;
 
-    public TransitionAdrCommandHandler(IAdrRepository adrRepository, IAuditRepository auditRepository)
+    public TransitionAdrCommandHandler(IAdrRepository adrRepository, IAuditRepository auditRepository, IUserRepository userRepository)
     {
         _adrRepository = adrRepository;
         _auditRepository = auditRepository;
+        _userRepository = userRepository;
     }
 
     public async Task<TransitionAdrResponse> Handle(TransitionAdrCommand request, CancellationToken cancellationToken)
@@ -35,12 +38,17 @@ public class TransitionAdrCommandHandler : IRequestHandler<TransitionAdrCommand,
         switch (currentStatus, targetStatus)
         {
             case ("draft", "in-review"):
-                if (request.ApproverIds is null || request.ApproverIds.Count == 0)
+                var approverIds = request.ApproverIds ?? new List<string>();
+                var validationErrors = await ApproverAssignmentValidator.ValidateAsync(
+                    request.ActorId, approverIds, _userRepository, request.TenantSlug);
+
+                if (validationErrors.Count > 0)
                 {
                     throw new ValidationFailedException("VALIDATION_FAILED",
-                        "At least one approver is required to submit for review.");
+                        "Approver assignment validation failed.", validationErrors);
                 }
-                adr.Approvers = request.ApproverIds.Select(id => new AdrApprover
+
+                adr.Approvers = approverIds.Select(id => new AdrApprover
                 {
                     UserId = id,
                     Status = "pending"

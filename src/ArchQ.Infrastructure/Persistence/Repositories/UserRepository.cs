@@ -101,4 +101,23 @@ public class UserRepository : IUserRepository
 
         return 0;
     }
+
+    public async Task<List<User>> ListByRoleAsync(string role, string tenantSlug)
+    {
+        var scope = await _context.GetScopeAsync(tenantSlug);
+        var query = $"SELECT u.* FROM `{CollectionName}` u WHERE ANY r IN u.roles SATISFIES r = $role END";
+        var queryOptions = new QueryOptions().Parameter("role", role);
+        var result = await scope.QueryAsync<User>(query, queryOptions);
+
+        var users = new List<User>();
+        await foreach (var row in result.Rows)
+        {
+            if (row != null)
+            {
+                users.Add(row);
+            }
+        }
+
+        return users;
+    }
 }
