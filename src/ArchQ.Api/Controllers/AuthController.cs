@@ -75,7 +75,12 @@ public class AuthController : ControllerBase
 
         SetAuthCookies(response.AccessToken, response.RefreshToken);
 
-        return Ok(new { message = "Token refreshed." });
+        return Ok(new
+        {
+            user = response.User,
+            tenant = response.Tenant,
+            memberships = response.Memberships
+        });
     }
 
     [HttpPost("logout")]

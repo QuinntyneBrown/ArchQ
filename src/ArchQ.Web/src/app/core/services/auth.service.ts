@@ -83,8 +83,23 @@ export class AuthService {
     );
   }
 
-  refreshToken(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/refresh`, {}, { withCredentials: true });
+  refreshToken(): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/refresh`, {}, { withCredentials: true }).pipe(
+      tap(response => {
+        this._currentUser.set(response.user);
+        this._currentTenant.set(response.tenant);
+        this._memberships.set(response.memberships);
+      })
+    );
+  }
+
+  restoreSession(): Promise<void> {
+    return new Promise((resolve) => {
+      this.refreshToken().subscribe({
+        next: () => resolve(),
+        error: () => resolve(), // No valid session — continue to login
+      });
+    });
   }
 
   getCurrentUser(): UserInfo | null {

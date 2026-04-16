@@ -1,6 +1,7 @@
 using ArchQ.Core.Exceptions;
 using ArchQ.Core.Interfaces;
 using ArchQ.Application.Common;
+using ArchQ.Application.Auth.Commands.Login;
 using MediatR;
 
 namespace ArchQ.Application.Auth.Commands.RefreshToken;
@@ -97,7 +98,21 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         return new RefreshTokenResponse
         {
             AccessToken = newAccessToken,
-            RefreshToken = newRefreshTokenJwt
+            RefreshToken = newRefreshTokenJwt,
+            User = new LoginUserDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                Roles = user.Roles
+            },
+            Tenant = new LoginTenantDto
+            {
+                Id = tenant.Id,
+                Slug = tenant.Slug,
+                DisplayName = tenant.DisplayName
+            },
+            Memberships = new List<LoginMembershipDto>()
         };
     }
 }
