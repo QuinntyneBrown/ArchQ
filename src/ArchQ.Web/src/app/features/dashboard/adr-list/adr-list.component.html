@@ -2,7 +2,10 @@
   <div class="adr-list-card">
     <!-- Header -->
     <div class="header-row">
-      <h1 class="heading" data-testid="page-title">Architecture Decision Records</h1>
+      <div class="header-text">
+        <h1 class="heading" data-testid="page-title">Architecture Decision Records</h1>
+        <p class="subtitle" data-testid="page-subtitle">Manage and track architectural decisions for {{ authService.currentTenant()?.displayName }}</p>
+      </div>
       <a routerLink="/adrs/new" class="btn-primary btn-new-desktop" data-testid="new-adr-button">+ New ADR</a>
     </div>
 

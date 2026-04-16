@@ -33,7 +33,7 @@ export class AdrListComponent implements OnInit {
 
   constructor(
     private readonly adrService: AdrService,
-    private readonly authService: AuthService,
+    public readonly authService: AuthService,
     private readonly toastService: ToastService,
     private readonly router: Router
   ) {}

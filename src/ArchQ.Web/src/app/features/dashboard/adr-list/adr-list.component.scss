@@ -16,7 +16,7 @@
 .header-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 1.5rem;
 }
 .heading {
@@ -24,6 +24,11 @@
   font-weight: 700;
   color: #ffffff;
   margin: 0;
+}
+.subtitle {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin: 0.25rem 0 0;
 }
 .btn-primary {
   padding: 0.5rem 1rem;
