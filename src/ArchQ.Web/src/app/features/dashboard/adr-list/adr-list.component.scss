@@ -416,8 +416,32 @@
   .fab { display: flex; }
 }
 
-/* Responsive: Tablet range — condensed table */
+/* Responsive: Tablet range (768–1024px) — compact table columns */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .title-cell {
+    max-width: 12rem;
+  }
+  .adr-table th,
+  .adr-table td {
+    padding: 0.75rem 0.5rem;
+  }
+  .author-name {
+    max-width: 6rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Responsive: Small tablet range (576–767px) — hide Modified column */
 @media (min-width: 576px) and (max-width: 767px) {
+  .title-cell {
+    max-width: 10rem;
+  }
+  .adr-table th,
+  .adr-table td {
+    padding: 0.75rem 0.5rem;
+  }
   .adr-table th:nth-child(5),
   .adr-table td:nth-child(5) {
     display: none;
