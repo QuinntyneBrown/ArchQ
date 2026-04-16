@@ -12,14 +12,20 @@ import { OrgService, MembershipsResponse } from '../../../core/services/org.serv
         class="org-pill"
         data-testid="org-switcher"
         [class.has-multiple]="hasMultipleOrgs()"
+        [disabled]="switching()"
         (click)="toggle()"
       >
-        <span class="org-name" data-testid="active-org">{{ activeTenantName() }}</span>
-        @if (hasMultipleOrgs()) {
-          <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m7 15 5 5 5-5"/>
-            <path d="m7 9 5-5 5 5"/>
-          </svg>
+        @if (switching()) {
+          <span class="switching-indicator" data-testid="switching-indicator">Switching...</span>
+        } @else {
+          <span class="org-avatar">{{ activeInitial() }}</span>
+          <span class="org-name" data-testid="active-org">{{ activeTenantName() }}</span>
+          @if (hasMultipleOrgs()) {
+            <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7 15 5 5 5-5"/>
+              <path d="m7 9 5-5 5 5"/>
+            </svg>
+          }
         }
       </button>
 
@@ -32,6 +38,7 @@ import { OrgService, MembershipsResponse } from '../../../core/services/org.serv
               [class.active]="org.tenantSlug === activeSlug()"
               (click)="selectOrg(org.tenantSlug)"
             >
+              <span class="org-option-avatar">{{ org.tenantDisplayName.charAt(0).toUpperCase() }}</span>
               <span class="org-option-name">{{ org.tenantDisplayName }}</span>
               @if (org.tenantSlug === activeSlug()) {
                 <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -64,12 +71,43 @@ import { OrgService, MembershipsResponse } from '../../../core/services/org.serv
       transition: background-color 0.15s ease;
     }
 
-    .org-pill.has-multiple {
+    .org-pill:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    .org-pill.has-multiple:not(:disabled) {
       cursor: pointer;
     }
 
-    .org-pill.has-multiple:hover {
+    .org-pill.has-multiple:not(:disabled):hover {
       background-color: #2a2d3e;
+    }
+
+    .org-avatar, .org-option-avatar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background-color: #6366f1;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .org-option-avatar {
+      width: 1.25rem;
+      height: 1.25rem;
+      font-size: 0.625rem;
+      background-color: #3a3f54;
+    }
+
+    .switching-indicator {
+      color: #9ca3af;
+      font-size: 0.875rem;
     }
 
     .org-name {
@@ -120,8 +158,16 @@ import { OrgService, MembershipsResponse } from '../../../core/services/org.serv
       color: #ffffff;
     }
 
+    .org-option:hover .org-option-avatar {
+      background-color: #6366f1;
+    }
+
     .org-option.active {
       color: #ffffff;
+    }
+
+    .org-option.active .org-option-avatar {
+      background-color: #6366f1;
     }
 
     .org-option-name {
@@ -136,15 +182,51 @@ import { OrgService, MembershipsResponse } from '../../../core/services/org.serv
       flex-shrink: 0;
       color: #6366f1;
     }
+
+    @media (max-width: 767px) {
+      .org-pill {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8125rem;
+        border-radius: 0.375rem;
+      }
+
+      .org-avatar {
+        width: 1.25rem;
+        height: 1.25rem;
+        font-size: 0.625rem;
+      }
+
+      .org-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 0.75rem 0.75rem 0 0;
+        max-height: 50vh;
+        padding: 0.5rem;
+      }
+
+      .org-option {
+        padding: 0.75rem;
+        font-size: 1rem;
+      }
+    }
   `]
 })
 export class OrgSwitcherComponent {
   readonly isOpen = signal(false);
+  readonly switching = signal(false);
   readonly orgs = signal<MembershipsResponse['memberships']>([]);
 
   readonly activeTenantName = computed(() => {
     const tenant = this.authService.currentTenant();
     return tenant?.displayName ?? '';
+  });
+
+  readonly activeInitial = computed(() => {
+    const name = this.activeTenantName();
+    return name ? name.charAt(0).toUpperCase() : '';
   });
 
   readonly activeSlug = computed(() => {
@@ -171,7 +253,7 @@ export class OrgSwitcherComponent {
   }
 
   toggle(): void {
-    if (!this.hasMultipleOrgs()) return;
+    if (!this.hasMultipleOrgs() || this.switching()) return;
     this.isOpen.update(v => !v);
   }
 
@@ -181,15 +263,18 @@ export class OrgSwitcherComponent {
       return;
     }
 
+    this.switching.set(true);
+    this.isOpen.set(false);
+
     this.orgService.switchOrg(tenantSlug).subscribe({
       next: (response) => {
         this.authService.updateTenant(response.tenant);
-        this.authService.updateMemberships(response.memberships);
-        this.isOpen.set(false);
+        this.loadOrgs();
+        this.switching.set(false);
         this.router.navigate(['/adrs']);
       },
       error: () => {
-        this.isOpen.set(false);
+        this.switching.set(false);
       }
     });
   }

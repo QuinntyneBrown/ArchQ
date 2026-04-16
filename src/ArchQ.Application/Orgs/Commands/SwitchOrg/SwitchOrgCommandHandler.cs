@@ -46,7 +46,7 @@ public class SwitchOrgCommandHandler : IRequestHandler<SwitchOrgCommand, SwitchO
         var membership = globalUser.Memberships
             .FirstOrDefault(m => string.Equals(m.TenantSlug, request.TenantSlug, StringComparison.OrdinalIgnoreCase));
 
-        if (membership is null)
+        if (membership is null || !string.Equals(membership.Status, "active", StringComparison.OrdinalIgnoreCase))
         {
             throw new ForbiddenException("NOT_A_MEMBER", "You are not a member of this organization.");
         }

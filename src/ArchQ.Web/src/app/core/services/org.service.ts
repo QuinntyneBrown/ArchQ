@@ -14,7 +14,7 @@ export interface MembershipsResponse {
 
 export interface SwitchOrgResponse {
   tenant: TenantInfo;
-  memberships: MembershipInfo[];
+  user: { id: string; roles: string[] };
 }
 
 @Injectable({ providedIn: 'root' })

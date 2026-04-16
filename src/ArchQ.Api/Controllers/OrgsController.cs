@@ -91,6 +91,9 @@ public class OrgsController : ControllerBase
     {
         var isSecure = !_env.IsDevelopment();
 
+        // Cookie Path is /api (not the narrower /api/auth/refresh) because the refresh
+        // cookie must be sent to /api/orgs/switch so the handler can revoke the
+        // previous refresh-token family during an org switch.
         Response.Cookies.Append(AccessCookieName, accessToken, new CookieOptions
         {
             HttpOnly = true,
