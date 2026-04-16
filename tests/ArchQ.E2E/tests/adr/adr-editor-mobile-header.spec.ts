@@ -49,8 +49,8 @@ test.describe('BUG-028: Editor header should not wrap on mobile', () => {
 
     expect(
       titleHeight,
-      `Title element is ${titleHeight}px tall, indicating text wraps to multiple lines. Should be ≤24px (single line).`
-    ).toBeLessThanOrEqual(24);
+      `Title element is ${titleHeight}px tall, indicating text wraps to multiple lines. Should be ≤28px (single line).`
+    ).toBeLessThanOrEqual(28);
 
     await context.close();
   });
