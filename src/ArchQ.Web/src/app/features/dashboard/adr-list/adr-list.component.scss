@@ -153,7 +153,9 @@
 .adr-number-link {
   color: #0062FF;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
+  font-family: 'Geist Mono', 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
 }
 .adr-number-link:hover {
   text-decoration: underline;
@@ -227,6 +229,7 @@
   white-space: nowrap;
   color: #9ca3af !important;
   font-size: 0.8125rem !important;
+  font-family: 'Geist Mono', 'Fira Code', 'JetBrains Mono', monospace;
 }
 
 /* Card List (mobile) */
@@ -254,8 +257,9 @@
 }
 .card-number {
   color: #0062FF;
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-weight: 500;
+  font-size: 0.75rem;
+  font-family: 'Geist Mono', 'Fira Code', 'JetBrains Mono', monospace;
 }
 .card-title {
   color: #ffffff;
@@ -275,7 +279,8 @@
 }
 .card-date {
   color: #5C5F6E;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  font-family: 'Geist Mono', 'Fira Code', 'JetBrains Mono', monospace;
 }
 
 /* Pagination */
