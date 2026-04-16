@@ -21,7 +21,7 @@ public class SmtpEmailService : IEmailService
 
     public Task SendVerificationEmailAsync(string email, string fullName, string token)
     {
-        var verificationUrl = $"http://localhost:4200/auth/verify-email?token={Uri.EscapeDataString(token)}";
+        var verificationUrl = $"http://localhost:4200/verify-email?token={Uri.EscapeDataString(token)}";
 
         _logger.LogInformation(
             "Verification email for {Email} ({FullName}): {Url}",
