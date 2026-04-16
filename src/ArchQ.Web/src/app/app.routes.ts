@@ -18,4 +18,5 @@ export const routes: Routes = [
   { path: 'adrs/new', component: AdrEditorComponent, canActivate: [authGuard] },
   { path: 'adrs/:id/edit', component: AdrEditorComponent, canActivate: [authGuard] },
   { path: '', redirectTo: '/adrs', pathMatch: 'full' },
+  { path: '**', redirectTo: '/adrs' },
 ];
