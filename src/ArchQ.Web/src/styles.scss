@@ -16,6 +16,10 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+button, input, select, textarea {
+  font-family: inherit;
+}
+
 a {
   color: #0062FF;
   text-decoration: none;
