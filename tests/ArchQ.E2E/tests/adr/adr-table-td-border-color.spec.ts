@@ -42,11 +42,12 @@ test.describe('BUG-047: Table td and th borders should match', () => {
       return border;
     });
 
-    // Should be #2E3142 = rgb(46, 49, 66), matching the th border
+    // Should be #1F2231 = rgb(31, 34, 49) — design uses subtle row dividers
+    // distinct from the stronger #2E3142 card/container border
     expect(
       borderColor,
-      `td border color is ${borderColor}, should match th at rgb(46, 49, 66)`
-    ).toBe('rgb(46, 49, 66)');
+      `td border color is ${borderColor}, should be rgb(31, 34, 49) per design`
+    ).toBe('rgb(31, 34, 49)');
 
     await context.close();
   });
