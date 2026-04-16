@@ -33,7 +33,6 @@ public class RolesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUserRoles(string tenantId, string userId)
     {
-        // TODO: Add admin authorization check
         var claims = GetAccessTokenClaims();
         if (claims is null)
         {
@@ -55,13 +54,25 @@ public class RolesController : ControllerBase
     [HttpPut]
     [ProducesResponseType(typeof(RoleChangeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> SetRoles(string tenantId, string userId, [FromBody] SetRolesRequest request)
     {
-        // TODO: Add admin authorization check
         var claims = GetAccessTokenClaims();
         if (claims is null)
         {
             return Unauthorized(new { code = "INVALID_TOKEN", message = "Access token is missing or invalid." });
+        }
+
+        if (!RolePolicy.CanPerform(claims.Roles, "role.assign"))
+        {
+            return Forbid();
+        }
+
+        // Self-promotion prevention: admin cannot assign/modify their own roles
+        if (string.Equals(claims.UserId, userId, StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { code = "SELF_PROMOTION", message = "Admins cannot modify their own roles. Another admin must do this." });
         }
 
         var response = await _mediator.Send(new SetRolesCommand
@@ -81,13 +92,25 @@ public class RolesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(RoleChangeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> AddRole(string tenantId, string userId, [FromBody] AddRoleRequest request)
     {
-        // TODO: Add admin authorization check
         var claims = GetAccessTokenClaims();
         if (claims is null)
         {
             return Unauthorized(new { code = "INVALID_TOKEN", message = "Access token is missing or invalid." });
+        }
+
+        if (!RolePolicy.CanPerform(claims.Roles, "role.assign"))
+        {
+            return Forbid();
+        }
+
+        // Self-promotion prevention: admin cannot assign roles to themselves
+        if (string.Equals(claims.UserId, userId, StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { code = "SELF_PROMOTION", message = "Admins cannot modify their own roles. Another admin must do this." });
         }
 
         var response = await _mediator.Send(new AddRoleCommand
@@ -107,13 +130,25 @@ public class RolesController : ControllerBase
     [HttpDelete("{role}")]
     [ProducesResponseType(typeof(RoleChangeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> RemoveRole(string tenantId, string userId, string role)
     {
-        // TODO: Add admin authorization check
         var claims = GetAccessTokenClaims();
         if (claims is null)
         {
             return Unauthorized(new { code = "INVALID_TOKEN", message = "Access token is missing or invalid." });
+        }
+
+        if (!RolePolicy.CanPerform(claims.Roles, "role.assign"))
+        {
+            return Forbid();
+        }
+
+        // Self-promotion prevention: admin cannot remove their own roles
+        if (string.Equals(claims.UserId, userId, StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { code = "SELF_PROMOTION", message = "Admins cannot modify their own roles. Another admin must do this." });
         }
 
         var response = await _mediator.Send(new RemoveRoleCommand

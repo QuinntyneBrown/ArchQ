@@ -13,33 +13,57 @@ public static class RolePolicy
             ["admin"] = new[]
             {
                 "tenant.manage",
-                "user.invite",
-                "user.remove",
+                "user.manage",
                 "role.assign",
-                "role.revoke",
                 "adr.create",
-                "adr.edit",
+                "adr.edit.own",
+                "adr.edit.any",
                 "adr.delete",
+                "adr.submit_review",
                 "adr.approve",
-                "adr.comment",
-                "adr.view"
+                "adr.reject",
+                "adr.view",
+                "comment.create",
+                "comment.edit.own",
+                "comment.delete.own",
+                "comment.delete.any",
+                "note.create",
+                "note.view",
+                "attachment.upload",
+                "attachment.view",
+                "audit.view",
+                "config.manage"
             },
             ["author"] = new[]
             {
                 "adr.create",
-                "adr.edit",
-                "adr.comment",
-                "adr.view"
+                "adr.edit.own",
+                "adr.submit_review",
+                "adr.view",
+                "comment.create",
+                "comment.edit.own",
+                "comment.delete.own",
+                "note.create",
+                "note.view",
+                "attachment.upload",
+                "attachment.view"
             },
             ["reviewer"] = new[]
             {
                 "adr.approve",
-                "adr.comment",
-                "adr.view"
+                "adr.reject",
+                "adr.view",
+                "comment.create",
+                "comment.edit.own",
+                "comment.delete.own",
+                "note.view",
+                "attachment.view"
             },
             ["viewer"] = new[]
             {
-                "adr.view"
+                "adr.view",
+                "note.view",
+                "attachment.view"
             }
         };
 
