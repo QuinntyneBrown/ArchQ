@@ -12,7 +12,7 @@
 | 08 | [ADR List & Browse](08-adr-list-browse/README.md) | Complete | L2-020, L2-028, L2-029 | List, filter, paginate ADRs with responsive layout |
 | 09 | [ADR Search](09-adr-search/README.md) | Complete | L2-019 | Full-text search via Couchbase FTS |
 | 10 | [ADR Workflow](10-adr-workflow/README.md) | Complete | L2-010, L2-011 | Status transitions, state machine, notifications |
-| 11 | [Approver Assignment](11-approver-assignment/README.md) | Draft | L2-012 | Assign reviewers when submitting for review |
+| 11 | [Approver Assignment](11-approver-assignment/README.md) | Complete | L2-012 | Assign reviewers when submitting for review |
 | 12 | [Approval Decisions](12-approval-decisions/README.md) | Draft | L2-013, L2-014 | Record approve/reject decisions, threshold enforcement |
 | 13 | [Meeting Notes](13-meeting-notes/README.md) | Draft | L2-015 | Attach meeting notes with title, date, attendees |
 | 14 | [General Notes](14-general-notes/README.md) | Draft | L2-016 | Attach Markdown notes to ADRs |
