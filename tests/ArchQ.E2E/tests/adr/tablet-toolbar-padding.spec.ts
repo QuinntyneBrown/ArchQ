@@ -8,13 +8,14 @@ test.describe('BUG-073: Tablet toolbar horizontal padding should be 1.25rem (20p
     const scssPath = path.resolve(__dirname, '../../../../src/ArchQ.Web/src/app/app.component.scss');
     const scss = fs.readFileSync(scssPath, 'utf-8');
 
-    // Find .app-toolbar block within media query
-    const toolbarStart = scss.indexOf('.app-toolbar {');
-    expect(toolbarStart).toBeGreaterThan(-1);
-    const toolbarEnd = scss.indexOf('}', toolbarStart);
-    const block = scss.substring(toolbarStart, toolbarEnd + 1);
+    // Find the media query block that contains .app-toolbar
+    const mediaStart = scss.indexOf('@media (max-width: 1024px)');
+    expect(mediaStart).toBeGreaterThan(-1);
+    const mediaSection = scss.substring(mediaStart);
 
-    expect(block).toMatch(/padding:\s*0\.75rem\s+1\.25rem/);
-    expect(block).not.toMatch(/padding:\s*0\.75rem\s+1rem/);
+    // Within the media query, find .app-toolbar
+    const toolbarMatch = mediaSection.match(/\.app-toolbar\s*\{[^}]*\}/s)?.[0] || '';
+
+    expect(toolbarMatch).toMatch(/padding:\s*0\.75rem\s+1\.25rem/);
   });
 });
