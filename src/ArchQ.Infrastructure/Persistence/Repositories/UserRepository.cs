@@ -65,4 +65,19 @@ public class UserRepository : IUserRepository
         await collection.ReplaceAsync(DocKey(user.Id), user);
         return user;
     }
+
+    public async Task<int> CountByRoleAsync(string role, string tenantSlug)
+    {
+        var scope = await _context.GetScopeAsync(tenantSlug);
+        var query = $"SELECT COUNT(*) AS cnt FROM `{CollectionName}` u WHERE ANY r IN u.roles SATISFIES r = $role END";
+        var queryOptions = new QueryOptions().Parameter("role", role);
+        var result = await scope.QueryAsync<dynamic>(query, queryOptions);
+
+        await foreach (var row in result.Rows)
+        {
+            return (int)row.cnt;
+        }
+
+        return 0;
+    }
 }
