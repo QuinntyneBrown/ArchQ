@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { OrgSwitcherComponent } from './shared/components/org-switcher/org-switcher.component';
@@ -12,11 +12,16 @@ import { AuthService } from './core/services/auth.service';
 })
 export class AppComponent {
   title = 'ArchQ.Web';
+  readonly sidebarOpen = signal(false);
 
   constructor(
     public readonly authService: AuthService,
     private readonly router: Router
   ) {}
+
+  toggleSidebar(): void {
+    this.sidebarOpen.update(v => !v);
+  }
 
   onLogout(): void {
     this.authService.logout().subscribe({
