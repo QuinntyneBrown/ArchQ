@@ -6,7 +6,7 @@
 | 02 | [User Registration](02-user-registration/README.md) | Complete | L2-003 | Register with email/password, email verification, bcrypt hashing |
 | 03 | [User Login & Session](03-user-login/README.md) | Complete | L2-003, L2-025 | Authenticate, JWT access/refresh tokens, account lockout |
 | 04 | [Organization Switching](04-organization-switching/README.md) | Complete | L2-004, L2-002 | Switch active tenant, scoped session context |
-| 05 | [Role Management](05-role-management/README.md) | Draft | L2-005, L2-006 | Assign/revoke Admin, Author, Reviewer, Viewer roles |
+| 05 | [Role Management](05-role-management/README.md) | Complete | L2-005, L2-006 | Assign/revoke Admin, Author, Reviewer, Viewer roles |
 | 06 | [ADR Creation](06-adr-creation/README.md) | Draft | L2-007, L2-009 | Create ADR with Markdown editor, template pre-population |
 | 07 | [ADR Editing](07-adr-editing/README.md) | Draft | L2-008 | Edit ADR content with revision tracking |
 | 08 | [ADR List & Browse](08-adr-list-browse/README.md) | Draft | L2-020, L2-028, L2-029 | List, filter, paginate ADRs with responsive layout |
