@@ -62,14 +62,19 @@ public class CouchbaseProvisioner : ICouchbaseProvisioner
 
     public async Task CreateIndexesAsync(string slug)
     {
-        var bucket = await _context.GetBucketAsync();
-        var scope = bucket.Scope(slug);
+        var cluster = await _context.GetClusterAsync();
+        var queryOptions = new QueryOptions().Timeout(TimeSpan.FromSeconds(10));
 
-        // Primary indexes on all collections
+        // Allow collections to stabilize before creating indexes
+        await Task.Delay(2000);
+
+        // Primary indexes on all collections using fully qualified keyspace paths
         foreach (var name in CollectionNames)
         {
-            var query = $"CREATE PRIMARY INDEX IF NOT EXISTS ON `{name}`";
-            await scope.QueryAsync<dynamic>(query, new QueryOptions());
+            var query = $"CREATE PRIMARY INDEX IF NOT EXISTS ON `archq`.`{slug}`.`{name}`";
+            using var result = await cluster.QueryAsync<dynamic>(query, queryOptions);
+            // Consume the result to ensure the query completes and the connection is released
+            await foreach (var _ in result) { }
         }
 
         // Secondary indexes per collection
@@ -85,8 +90,9 @@ public class CouchbaseProvisioner : ICouchbaseProvisioner
 
         foreach (var (collection, indexName, field) in secondaryIndexes)
         {
-            var query = $"CREATE INDEX `{indexName}` IF NOT EXISTS ON `{collection}`(`{field}`)";
-            await scope.QueryAsync<dynamic>(query, new QueryOptions());
+            var query = $"CREATE INDEX `{indexName}` IF NOT EXISTS ON `archq`.`{slug}`.`{collection}`(`{field}`)";
+            using var result = await cluster.QueryAsync<dynamic>(query, queryOptions);
+            await foreach (var _ in result) { }
         }
     }
 }

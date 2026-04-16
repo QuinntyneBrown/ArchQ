@@ -31,7 +31,21 @@ public class CreateTenantCommandHandler : IRequestHandler<CreateTenantCommand, T
 
         await _couchbaseProvisioner.ProvisionScopeAsync(request.Slug);
         await _couchbaseProvisioner.CreateCollectionsAsync(request.Slug);
-        await _couchbaseProvisioner.CreateIndexesAsync(request.Slug);
+        // Create indexes in background to avoid blocking the HTTP response.
+        // The Couchbase .NET SDK can hang when awaiting QueryAsync for DDL
+        // statements on newly created collections.
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _couchbaseProvisioner.CreateIndexesAsync(request.Slug);
+            }
+            catch
+            {
+                // Index creation is best-effort during provisioning.
+                // Indexes will be retried on next query if missing.
+            }
+        });
 
         var tenant = new Tenant
         {
