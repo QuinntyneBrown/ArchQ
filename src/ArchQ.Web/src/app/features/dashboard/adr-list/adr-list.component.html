@@ -11,14 +11,20 @@
 
     <!-- Filters Row -->
     <div class="filters-row">
-      <input
-        type="text"
-        class="search-input"
-        data-testid="search-input"
-        placeholder="Search ADRs..."
-        [(ngModel)]="searchTerm"
-        (ngModelChange)="onSearchChange()"
-      />
+      <div class="search-wrapper">
+        <svg class="search-icon" data-testid="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          class="search-input"
+          data-testid="search-input"
+          placeholder="Search ADRs..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+        />
+      </div>
       <select
         class="status-filter"
         data-testid="status-filter"

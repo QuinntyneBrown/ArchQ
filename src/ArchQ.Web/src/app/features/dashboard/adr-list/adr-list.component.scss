@@ -52,15 +52,28 @@
   gap: 0.75rem;
   margin-bottom: 1.25rem;
 }
-.search-input {
+.search-wrapper {
   flex: 1;
-  padding: 0.5rem 0.75rem;
+  position: relative;
+}
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
   border: 1px solid #3a3f54;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   background-color: #252836;
   color: #ffffff;
   outline: none;
+  box-sizing: border-box;
   transition: border-color 0.15s ease;
 }
 .search-input::placeholder { color: #6b7280; }
