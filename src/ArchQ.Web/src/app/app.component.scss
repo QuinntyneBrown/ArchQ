@@ -66,6 +66,7 @@
   padding: 0.5rem 0.75rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
+  font-weight: 500;
   color: #9ca3af;
   text-decoration: none;
   transition: background-color 0.15s ease, color 0.15s ease;
@@ -78,6 +79,7 @@
   &.nav-active {
     background-color: #0062FF;
     color: #ffffff;
+    font-weight: 600;
   }
 }
 
