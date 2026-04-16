@@ -4,20 +4,20 @@ test.describe('ADR Editing', () => {
 
   async function setupUserAndAdr(request: any) {
     const email = `adredit-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Edit User', email, password: 'S3cur3P@ss!', organizationName: 'Edit Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
     const slug = loginBody.tenant.slug;
 
     // Create an ADR
-    const adrResp = await request.post(`http://localhost:5000/api/tenants/${slug}/adrs`, {
+    const adrResp = await request.post(`http://localhost:5299/api/tenants/${slug}/adrs`, {
       data: { title: 'Original Title', body: '## Context\n\nOriginal context', tags: ['test'] },
     });
     const adr = await adrResp.json();
@@ -28,7 +28,7 @@ test.describe('ADR Editing', () => {
     const { slug, adr } = await setupUserAndAdr(request);
 
     const updateResp = await request.put(
-      `http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}`,
+      `http://localhost:5299/api/tenants/${slug}/adrs/${adr.id}`,
       { data: { title: 'Updated Title', body: '## Context\n\nUpdated context', tags: ['test', 'updated'] } }
     );
     expect(updateResp.status()).toBe(200);
@@ -41,12 +41,12 @@ test.describe('ADR Editing', () => {
     const { slug, adr } = await setupUserAndAdr(request);
 
     // First edit
-    await request.put(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}`, {
+    await request.put(`http://localhost:5299/api/tenants/${slug}/adrs/${adr.id}`, {
       data: { title: 'Edit 1', body: '## Context\n\nFirst edit', tags: [] },
     });
 
     // Second edit
-    const resp = await request.put(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}`, {
+    const resp = await request.put(`http://localhost:5299/api/tenants/${slug}/adrs/${adr.id}`, {
       data: { title: 'Edit 2', body: '## Context\n\nSecond edit', tags: [] },
     });
     const updated = await resp.json();
@@ -59,7 +59,7 @@ test.describe('ADR Editing', () => {
     // We can't easily set status to "approved" without the workflow feature,
     // so test the permission check instead — a viewer shouldn't be able to edit
     // For now, just verify the edit endpoint exists and works for valid cases
-    const getResp = await request.get(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}`);
+    const getResp = await request.get(`http://localhost:5299/api/tenants/${slug}/adrs/${adr.id}`);
     expect(getResp.status()).toBe(200);
     const fetched = await getResp.json();
     expect(fetched.body).toContain('Original context');
@@ -68,7 +68,7 @@ test.describe('ADR Editing', () => {
   test('API should return ADR with body on GET', async ({ request }) => {
     const { slug, adr } = await setupUserAndAdr(request);
 
-    const getResp = await request.get(`http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}`);
+    const getResp = await request.get(`http://localhost:5299/api/tenants/${slug}/adrs/${adr.id}`);
     expect(getResp.status()).toBe(200);
     const fetched = await getResp.json();
     expect(fetched.id).toBe(adr.id);
@@ -83,7 +83,7 @@ test.describe('ADR Editing', () => {
     const { slug, adr } = await setupUserAndAdr(request);
 
     const updateResp = await request.put(
-      `http://localhost:5000/api/tenants/${slug}/adrs/${adr.id}`,
+      `http://localhost:5299/api/tenants/${slug}/adrs/${adr.id}`,
       { data: { title: '', body: '## Context\n\nSomething', tags: [] } }
     );
     expect(updateResp.status()).toBe(400);

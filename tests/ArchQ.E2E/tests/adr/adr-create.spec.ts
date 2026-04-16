@@ -6,20 +6,20 @@ test.describe('ADR Creation', () => {
   test('API should create a new ADR in Draft status', async ({ request }) => {
     // Register, verify, login
     const email = `adrcreate-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'ADR Creator', email, password: 'S3cur3P@ss!', organizationName: 'ADR Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
 
     // Create ADR
     const createResp = await request.post(
-      `http://localhost:5000/api/tenants/${loginBody.tenant.slug}/adrs`,
+      `http://localhost:5299/api/tenants/${loginBody.tenant.slug}/adrs`,
       { data: { title: TEST_ADRS.draft.title, body: TEST_ADRS.draft.content, tags: ['architecture'] } }
     );
 
@@ -34,27 +34,27 @@ test.describe('ADR Creation', () => {
 
   test('API should assign sequential ADR numbers', async ({ request }) => {
     const email = `adrseq-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Seq Creator', email, password: 'S3cur3P@ss!', organizationName: 'Seq Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
     const slug = loginBody.tenant.slug;
 
     // Create first ADR
-    const resp1 = await request.post(`http://localhost:5000/api/tenants/${slug}/adrs`, {
+    const resp1 = await request.post(`http://localhost:5299/api/tenants/${slug}/adrs`, {
       data: { title: 'First ADR', body: '## Context\n\nFirst', tags: [] },
     });
     const adr1 = await resp1.json();
     expect(adr1.adrNumber).toBe('ADR-001');
 
     // Create second ADR
-    const resp2 = await request.post(`http://localhost:5000/api/tenants/${slug}/adrs`, {
+    const resp2 = await request.post(`http://localhost:5299/api/tenants/${slug}/adrs`, {
       data: { title: 'Second ADR', body: '## Context\n\nSecond', tags: [] },
     });
     const adr2 = await resp2.json();
@@ -63,19 +63,19 @@ test.describe('ADR Creation', () => {
 
   test('API should return 400 for missing title', async ({ request }) => {
     const email = `adrmissing-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Missing Title', email, password: 'S3cur3P@ss!', organizationName: 'Missing Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
 
     const createResp = await request.post(
-      `http://localhost:5000/api/tenants/${loginBody.tenant.slug}/adrs`,
+      `http://localhost:5299/api/tenants/${loginBody.tenant.slug}/adrs`,
       { data: { title: '', body: '## Context\n\nSomething', tags: [] } }
     );
     expect(createResp.status()).toBe(400);
@@ -83,19 +83,19 @@ test.describe('ADR Creation', () => {
 
   test('API should get tenant template', async ({ request }) => {
     const email = `adrtempl-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Template User', email, password: 'S3cur3P@ss!', organizationName: 'Template Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
 
     const templateResp = await request.get(
-      `http://localhost:5000/api/tenants/${loginBody.tenant.slug}/config/template`
+      `http://localhost:5299/api/tenants/${loginBody.tenant.slug}/config/template`
     );
     expect(templateResp.status()).toBe(200);
     const template = await templateResp.json();
@@ -106,12 +106,12 @@ test.describe('ADR Creation', () => {
 
   test('should create ADR via UI editor', async ({ page, request }) => {
     const email = `adreditor-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Editor User', email, password: 'S3cur3P@ss!', organizationName: 'Editor Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
 
     // Login via UI
     await page.goto('/login');
@@ -139,12 +139,12 @@ test.describe('ADR Creation', () => {
 
   test('should show live preview of markdown content', async ({ page, request }) => {
     const email = `adrpreview-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Preview User', email, password: 'S3cur3P@ss!', organizationName: 'Preview Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
 
     await page.goto('/login');
     await page.locator('[data-testid="email-input"]').fill(email);

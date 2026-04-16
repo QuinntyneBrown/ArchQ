@@ -5,12 +5,12 @@ test.describe('Organization Switching', () => {
   test('should display org switcher with current org name', async ({ page, request }) => {
     // Register, verify, login a user
     const email = `orgswitch-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Org Switch User', email, password: 'S3cur3P@ss!', organizationName: 'Switch Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
 
     await page.goto('/login');
     await page.locator('[data-testid="email-input"]').fill(email);
@@ -25,12 +25,12 @@ test.describe('Organization Switching', () => {
 
   test('should not show dropdown for single-org user', async ({ page, request }) => {
     const email = `singleorg-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Single Org User', email, password: 'S3cur3P@ss!', organizationName: 'Solo Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
 
     await page.goto('/login');
     await page.locator('[data-testid="email-input"]').fill(email);
@@ -46,21 +46,21 @@ test.describe('Organization Switching', () => {
 
   test('API should list memberships', async ({ request }) => {
     const email = `listorgs-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'List Orgs User', email, password: 'S3cur3P@ss!', organizationName: 'List Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
 
     // Login to get cookies
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     expect(loginResp.status()).toBe(200);
 
     // List memberships
-    const orgsResp = await request.get('http://localhost:5000/api/orgs');
+    const orgsResp = await request.get('http://localhost:5299/api/orgs');
     expect(orgsResp.status()).toBe(200);
     const body = await orgsResp.json();
     expect(body.memberships).toBeTruthy();
@@ -71,18 +71,18 @@ test.describe('Organization Switching', () => {
 
   test('API should return 403 for non-member switch', async ({ request }) => {
     const email = `noswitch-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'No Switch User', email, password: 'S3cur3P@ss!', organizationName: 'No Switch Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
 
     // Try to switch to a non-existent org
-    const switchResp = await request.post('http://localhost:5000/api/orgs/switch', {
+    const switchResp = await request.post('http://localhost:5299/api/orgs/switch', {
       data: { tenantSlug: 'non-existent-org' },
     });
     expect(switchResp.status()).toBe(403);

@@ -27,7 +27,7 @@ test.describe('User Login', () => {
   test('should show error for unverified account', async ({ page, request }) => {
     // Register but don't verify email
     const email = `unverified-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: {
         fullName: 'Unverified User',
         email,
@@ -47,7 +47,7 @@ test.describe('User Login', () => {
   test('should lock account after 5 failed attempts', async ({ page, request }) => {
     // Register and verify a user first
     const email = `lockout-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: {
         fullName: 'Lockout User',
         email,
@@ -57,16 +57,16 @@ test.describe('User Login', () => {
     });
     // Verify email via test endpoint
     const tokenResp = await request.get(
-      `http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`
+      `http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`
     );
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', {
+    await request.post('http://localhost:5299/api/auth/verify-email', {
       data: { token },
     });
 
     // Attempt 5 failed logins via API
     for (let i = 0; i < 5; i++) {
-      await request.post('http://localhost:5000/api/auth/login', {
+      await request.post('http://localhost:5299/api/auth/login', {
         data: { email, password: 'WrongPassword!' },
       });
     }
@@ -83,7 +83,7 @@ test.describe('User Login', () => {
   test('should display login response with user info', async ({ page, request }) => {
     // Register and verify a user
     const email = `logininfo-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: {
         fullName: 'Login Info User',
         email,
@@ -92,15 +92,15 @@ test.describe('User Login', () => {
       },
     });
     const tokenResp = await request.get(
-      `http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`
+      `http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`
     );
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', {
+    await request.post('http://localhost:5299/api/auth/verify-email', {
       data: { token },
     });
 
     // Login via API and check response shape
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
 

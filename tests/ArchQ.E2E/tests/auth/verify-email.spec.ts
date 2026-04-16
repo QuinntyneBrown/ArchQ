@@ -24,7 +24,7 @@ test.describe('Email Verification', () => {
   test('should show success and sign-in link for valid token', async ({ page, request }) => {
     // Register a user first to get a real token
     const email = `verify-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: {
         fullName: 'Verify User',
         email,
@@ -36,7 +36,7 @@ test.describe('Email Verification', () => {
     // In a real test, we'd extract the token from the email.
     // For E2E, we use a test helper API to get the verification token.
     const tokenResp = await request.get(
-      `http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`
+      `http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`
     );
     const { token } = await tokenResp.json();
 

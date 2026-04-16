@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface RegisterRequest {
   fullName: string;
@@ -41,7 +42,7 @@ export interface LoginResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiUrl = 'http://localhost:5000/api/auth';
+  private readonly apiUrl = `${environment.apiUrl}/auth`;
 
   private readonly _currentUser = signal<UserInfo | null>(null);
   private readonly _currentTenant = signal<TenantInfo | null>(null);

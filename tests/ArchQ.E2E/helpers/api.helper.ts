@@ -1,6 +1,6 @@
 import { type APIRequestContext } from '@playwright/test';
 
-const API_BASE = process.env.API_URL || 'http://localhost:5000';
+const API_BASE = process.env.API_URL || 'http://localhost:5299';
 
 export class ApiHelper {
   constructor(private readonly request: APIRequestContext) {}

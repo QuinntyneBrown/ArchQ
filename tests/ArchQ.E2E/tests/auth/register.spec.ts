@@ -103,7 +103,7 @@ test.describe('User Registration', () => {
 
     // Register the first user via API
     const firstEmail = `dup-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: {
         fullName: 'First User',
         email: firstEmail,

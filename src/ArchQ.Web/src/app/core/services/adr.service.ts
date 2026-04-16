@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AdrResponse, AdrDetailResponse, CreateAdrRequest, UpdateAdrRequest, UpdateAdrResponse, TemplateResponse, AdrListResponse, AdrListParams, SearchResponse } from '../models/adr.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AdrService {
-  private readonly API_URL = 'http://localhost:5000/api/tenants';
+  private readonly API_URL = `${environment.apiUrl}/tenants`;
 
   constructor(private readonly http: HttpClient) {}
 

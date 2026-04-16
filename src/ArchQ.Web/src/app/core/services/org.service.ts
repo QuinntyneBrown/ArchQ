@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { TenantInfo, MembershipInfo } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface MembershipsResponse {
   memberships: {
@@ -19,7 +20,7 @@ export interface SwitchOrgResponse {
 
 @Injectable({ providedIn: 'root' })
 export class OrgService {
-  private readonly apiUrl = 'http://localhost:5000/api/orgs';
+  private readonly apiUrl = `${environment.apiUrl}/orgs`;
 
   constructor(private readonly http: HttpClient) {}
 

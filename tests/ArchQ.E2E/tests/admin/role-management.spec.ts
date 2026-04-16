@@ -5,13 +5,13 @@ test.describe('Role Management', () => {
   test('API should add a role to a user', async ({ request }) => {
     // Register admin user, verify, login
     const email = `roleadmin-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Role Admin', email, password: 'S3cur3P@ss!', organizationName: 'Role Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
@@ -20,7 +20,7 @@ test.describe('Role Management', () => {
 
     // Add reviewer role
     const addResp = await request.post(
-      `http://localhost:5000/api/tenants/${tenantId}/users/${userId}/roles`,
+      `http://localhost:5299/api/tenants/${tenantId}/users/${userId}/roles`,
       { data: { role: 'reviewer' } }
     );
     expect(addResp.status()).toBe(200);
@@ -30,13 +30,13 @@ test.describe('Role Management', () => {
 
   test('API should remove a role from a user', async ({ request }) => {
     const email = `roleremove-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Role Remove', email, password: 'S3cur3P@ss!', organizationName: 'Remove Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
@@ -45,13 +45,13 @@ test.describe('Role Management', () => {
 
     // First add author role
     await request.post(
-      `http://localhost:5000/api/tenants/${tenantId}/users/${userId}/roles`,
+      `http://localhost:5299/api/tenants/${tenantId}/users/${userId}/roles`,
       { data: { role: 'author' } }
     );
 
     // Remove author role
     const removeResp = await request.delete(
-      `http://localhost:5000/api/tenants/${tenantId}/users/${userId}/roles/author`
+      `http://localhost:5299/api/tenants/${tenantId}/users/${userId}/roles/author`
     );
     expect(removeResp.status()).toBe(200);
     const body = await removeResp.json();
@@ -60,19 +60,19 @@ test.describe('Role Management', () => {
 
   test('API should return 400 for invalid role name', async ({ request }) => {
     const email = `roleinvalid-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Invalid Role', email, password: 'S3cur3P@ss!', organizationName: 'Invalid Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
 
     const addResp = await request.post(
-      `http://localhost:5000/api/tenants/${loginBody.tenant.id}/users/${loginBody.user.id}/roles`,
+      `http://localhost:5299/api/tenants/${loginBody.tenant.id}/users/${loginBody.user.id}/roles`,
       { data: { role: 'superadmin' } }
     );
     expect(addResp.status()).toBe(400);
@@ -82,20 +82,20 @@ test.describe('Role Management', () => {
 
   test('API should return 409 when removing last admin', async ({ request }) => {
     const email = `lastadmin-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Last Admin', email, password: 'S3cur3P@ss!', organizationName: 'Last Admin Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
 
     // Try to remove admin role from the only admin
     const removeResp = await request.delete(
-      `http://localhost:5000/api/tenants/${loginBody.tenant.id}/users/${loginBody.user.id}/roles/admin`
+      `http://localhost:5299/api/tenants/${loginBody.tenant.id}/users/${loginBody.user.id}/roles/admin`
     );
     expect(removeResp.status()).toBe(409);
     const body = await removeResp.json();
@@ -104,19 +104,19 @@ test.describe('Role Management', () => {
 
   test('API should get user roles with permissions', async ({ request }) => {
     const email = `getroles-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Get Roles', email, password: 'S3cur3P@ss!', organizationName: 'Get Roles Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
 
     const rolesResp = await request.get(
-      `http://localhost:5000/api/tenants/${loginBody.tenant.id}/users/${loginBody.user.id}/roles`
+      `http://localhost:5299/api/tenants/${loginBody.tenant.id}/users/${loginBody.user.id}/roles`
     );
     expect(rolesResp.status()).toBe(200);
     const body = await rolesResp.json();
@@ -127,19 +127,19 @@ test.describe('Role Management', () => {
 
   test('API should set roles via PUT (full replace)', async ({ request }) => {
     const email = `setroles-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Set Roles', email, password: 'S3cur3P@ss!', organizationName: 'Set Roles Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
 
     const setResp = await request.put(
-      `http://localhost:5000/api/tenants/${loginBody.tenant.id}/users/${loginBody.user.id}/roles`,
+      `http://localhost:5299/api/tenants/${loginBody.tenant.id}/users/${loginBody.user.id}/roles`,
       { data: { roles: ['admin', 'author', 'reviewer'] } }
     );
     expect(setResp.status()).toBe(200);
@@ -149,22 +149,22 @@ test.describe('Role Management', () => {
 
   test('API should list all role definitions', async ({ request }) => {
     const email = `listroles-${Date.now()}@example.com`;
-    await request.post('http://localhost:5000/api/auth/register', {
+    await request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'List Roles', email, password: 'S3cur3P@ss!', organizationName: 'List Roles Org' },
     });
-    const tokenResp = await request.get(`http://localhost:5000/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
+    const tokenResp = await request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await tokenResp.json();
-    await request.post('http://localhost:5000/api/auth/verify-email', { data: { token } });
-    await request.post('http://localhost:5000/api/auth/login', {
+    await request.post('http://localhost:5299/api/auth/verify-email', { data: { token } });
+    await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
-    const loginResp = await request.post('http://localhost:5000/api/auth/login', {
+    const loginResp = await request.post('http://localhost:5299/api/auth/login', {
       data: { email, password: 'S3cur3P@ss!' },
     });
     const loginBody = await loginResp.json();
 
     const rolesResp = await request.get(
-      `http://localhost:5000/api/tenants/${loginBody.tenant.id}/roles`
+      `http://localhost:5299/api/tenants/${loginBody.tenant.id}/roles`
     );
     expect(rolesResp.status()).toBe(200);
     const body = await rolesResp.json();
