@@ -1,5 +1,6 @@
 using ArchQ.Core.Entities;
 using ArchQ.Core.Interfaces;
+using Couchbase.Core.Exceptions.KeyValue;
 using Couchbase.Query;
 
 namespace ArchQ.Infrastructure.Persistence.Repositories;
@@ -8,19 +9,37 @@ public class AdrRepository : IAdrRepository
 {
     private readonly CouchbaseContext _context;
     private const string CollectionName = "adrs";
+    private const int MaxCasRetries = 3;
 
     public AdrRepository(CouchbaseContext context)
     {
         _context = context;
     }
 
-    private static string DocKey(string id) => $"adr::{id}";
+    // Id already carries the "adr::" prefix (e.g. "adr::550e8400-...")
+    private static string DocKey(string id) => id;
 
     public async Task<Adr> CreateAsync(Adr adr, string tenantSlug)
     {
         var collection = await _context.GetCollectionAsync(tenantSlug, CollectionName);
-        await collection.InsertAsync(DocKey(adr.Id), adr);
-        return adr;
+
+        for (int attempt = 0; attempt <= MaxCasRetries; attempt++)
+        {
+            try
+            {
+                await collection.InsertAsync(DocKey(adr.Id), adr);
+                return adr;
+            }
+            catch (DocumentExistsException) when (attempt < MaxCasRetries)
+            {
+                // Concurrent insert conflict — re-generate id and re-sequence the ADR number
+                adr.Id = $"adr::{Guid.NewGuid()}";
+                var maxNum = await GetMaxAdrNumberAsync(tenantSlug);
+                adr.AdrNumber = $"ADR-{(maxNum + 1):D3}";
+            }
+        }
+
+        throw new InvalidOperationException("Failed to insert ADR after maximum CAS retries due to concurrent creation conflicts.");
     }
 
     public async Task<Adr?> GetByIdAsync(string id, string tenantSlug)

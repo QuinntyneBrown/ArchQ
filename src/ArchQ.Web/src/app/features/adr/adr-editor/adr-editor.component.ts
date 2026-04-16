@@ -2,6 +2,7 @@ import { Component, signal, computed, OnInit, ViewChild, ElementRef } from '@ang
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import { AdrService } from '../../../core/services/adr.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
@@ -76,6 +77,7 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
           <div class="toolbar" data-testid="markdown-toolbar">
             <button class="toolbar-btn" title="Bold" (click)="insertMarkdown('bold')"><strong>B</strong></button>
             <button class="toolbar-btn" title="Italic" (click)="insertMarkdown('italic')"><em>I</em></button>
+            <button class="toolbar-btn" title="Heading" (click)="insertMarkdown('heading')"><strong>H</strong></button>
             <button class="toolbar-btn" title="Code" (click)="insertMarkdown('code')">&lt;&gt;</button>
             <button class="toolbar-btn" title="Link" (click)="insertMarkdown('link')">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -403,7 +405,8 @@ export class AdrEditorComponent implements OnInit {
 
   readonly renderedHtml = computed(() => {
     try {
-      return marked.parse(this.content || '', { async: false }) as string;
+      const raw = marked.parse(this.content || '', { async: false }) as string;
+      return DOMPurify.sanitize(raw);
     } catch {
       return '';
     }
@@ -421,7 +424,7 @@ export class AdrEditorComponent implements OnInit {
     if (tenant) {
       this.adrService.getTemplate(tenant.slug).subscribe({
         next: (resp) => {
-          this.content = resp.content;
+          this.content = resp.body;
         },
         error: () => {
           this.content = this.defaultTemplate();
@@ -438,11 +441,10 @@ export class AdrEditorComponent implements OnInit {
       return;
     }
 
-    const requiredSections = ['## Status', '## Context', '## Decision'];
+    const requiredSections = ['## Status', '## Context', '## Decision', '## Consequences'];
     const missingSections = requiredSections.filter(s => !this.content.includes(s));
     if (missingSections.length > 0) {
-      this.toastService.show(`Missing sections: ${missingSections.join(', ')}`, 'error');
-      return;
+      this.toastService.show(`Warning: Missing sections: ${missingSections.join(', ')}`, 'error');
     }
 
     const tenant = this.authService.currentTenant();
@@ -455,7 +457,7 @@ export class AdrEditorComponent implements OnInit {
 
     this.adrService.createAdr(tenant.slug, {
       title: this.title,
-      content: this.content
+      body: this.content
     }).subscribe({
       next: (adr) => {
         this.saving.set(false);
@@ -488,6 +490,10 @@ export class AdrEditorComponent implements OnInit {
       case 'italic':
         insertion = `*${selected || 'italic text'}*`;
         cursorOffset = selected ? insertion.length : 1;
+        break;
+      case 'heading':
+        insertion = `\n## ${selected || 'Heading'}`;
+        cursorOffset = insertion.length;
         break;
       case 'code':
         insertion = `\`${selected || 'code'}\``;

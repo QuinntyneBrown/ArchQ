@@ -1,18 +1,24 @@
 export interface AdrResponse {
   id: string;
-  adrNumber: number;
+  adrNumber: string;
   title: string;
-  content: string;
   status: string;
+  authorId: string;
+  tags: string[];
+  version: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateAdrRequest {
   title: string;
-  content: string;
+  body: string;
+  tags?: string[];
 }
 
 export interface TemplateResponse {
-  content: string;
+  body: string;
+  requiredSections: string[];
+  isCustom: boolean;
+  updatedAt: string | null;
 }

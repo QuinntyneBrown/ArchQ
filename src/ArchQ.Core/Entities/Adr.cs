@@ -3,7 +3,7 @@ namespace ArchQ.Core.Entities;
 public class Adr
 {
     public string Type { get; set; } = "adr";
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = $"adr::{Guid.NewGuid()}";
     public string AdrNumber { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
