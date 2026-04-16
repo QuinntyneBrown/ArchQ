@@ -15,7 +15,7 @@
         </svg>
       </a>
       <span class="top-bar-title">{{ editMode() && existingAdr() ? 'Editing ' + existingAdr()!.adrNumber + ': ' + existingAdr()!.title : 'New ADR' }}</span>
-      <span class="status-badge" data-testid="status-badge">{{ existingAdr()?.status || 'Draft' }}</span>
+      <span class="status-badge" [ngClass]="getStatusClass(existingAdr()?.status || 'draft')" data-testid="status-badge">{{ existingAdr()?.status || 'Draft' }}</span>
     </div>
     <div class="top-bar-right">
       <button

@@ -1,5 +1,6 @@
 import { Component, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NgClass } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -11,7 +12,7 @@ import { AdrDetailResponse } from '../../../core/models/adr.model';
 @Component({
   selector: 'app-adr-editor',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, NgClass],
   templateUrl: './adr-editor.component.html',
   styleUrl: './adr-editor.component.scss'
 })
@@ -34,6 +35,18 @@ export class AdrEditorComponent implements OnInit {
     const terminalStatuses = ['accepted', 'rejected', 'superseded', 'deprecated'];
     return terminalStatuses.includes(adr.status);
   });
+
+  getStatusClass(status: string): string {
+    const normalized = status.toLowerCase().replace(/\s+/g, '-');
+    switch (normalized) {
+      case 'draft': return 'status-draft';
+      case 'in-review': return 'status-in-review';
+      case 'approved': return 'status-approved';
+      case 'rejected': return 'status-rejected';
+      case 'superseded': return 'status-superseded';
+      default: return 'status-draft';
+    }
+  }
 
   readonly renderedHtml = computed(() => {
     try {
