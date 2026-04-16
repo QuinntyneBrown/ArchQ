@@ -55,7 +55,7 @@ public class SeedHandler
             UpdatedAt = DateTime.UtcNow
         };
 
-        var tenantsCollection = await _couchbaseContext.GetCollectionAsync("_system", "tenants");
+        var tenantsCollection = await _couchbaseContext.GetCollectionAsync("system", "tenants");
         var tenantKey = $"tenant::{tenant.Id}";
 
         try
@@ -133,7 +133,7 @@ public class SeedHandler
             CreatedAt = DateTime.UtcNow
         };
 
-        var globalUsersCollection = await _couchbaseContext.GetCollectionAsync("_system", "global_users");
+        var globalUsersCollection = await _couchbaseContext.GetCollectionAsync("system", "global_users");
 
         try
         {

@@ -5,7 +5,7 @@ namespace ArchQ.Application.Tenants.Commands.CreateTenant;
 public class CreateTenantCommandValidator : AbstractValidator<CreateTenantCommand>
 {
     private static readonly string[] ReservedSlugs =
-        ["_system", "_default", "admin", "api", "www", "app"];
+        ["system", "_default", "admin", "api", "www", "app"];
 
     public CreateTenantCommandValidator()
     {

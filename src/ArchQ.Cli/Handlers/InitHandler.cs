@@ -113,7 +113,7 @@ public class InitHandler
         _logger.LogInformation("Bucket '{BucketName}' is ready", config.BucketName);
 
         // Step 7: Create system scope and collections via SDK
-        _logger.LogInformation("Creating _system scope and collections...");
+        _logger.LogInformation("Creating system scope and collections...");
         await _bootstrapper.EnsureSystemScopeAsync();
 
         // Step 8: Wait for collections to be queryable, then create system indexes
@@ -122,7 +122,7 @@ public class InitHandler
 
         _logger.LogInformation("Creating primary indexes on system collections...");
         var bucket = await _couchbaseContext.GetBucketAsync();
-        var systemScope = bucket.Scope("_system");
+        var systemScope = bucket.Scope("system");
 
         foreach (var collection in SystemCollections)
         {
@@ -130,11 +130,11 @@ public class InitHandler
             try
             {
                 await systemScope.QueryAsync<dynamic>(query, new QueryOptions().CancellationToken(cancellationToken));
-                _logger.LogInformation("  Created primary index on _system.{Collection}", collection);
+                _logger.LogInformation("  Created primary index on system.{Collection}", collection);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "  Failed to create index on _system.{Collection}; it may already exist", collection);
+                _logger.LogWarning(ex, "  Failed to create index on system.{Collection}; it may already exist", collection);
             }
         }
 

@@ -16,7 +16,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -28,7 +29,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
 var app = builder.Build();
 
-// Bootstrap _system scope and its collections on startup
+// Bootstrap system scope and its collections on startup
 var bootstrapper = app.Services.GetRequiredService<CouchbaseBootstrapper>();
 await bootstrapper.EnsureSystemScopeAsync();
 

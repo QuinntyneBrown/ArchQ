@@ -8,7 +8,7 @@ namespace ArchQ.Infrastructure.Persistence.Repositories;
 public class RefreshTokenRepository : IRefreshTokenRepository
 {
     private readonly CouchbaseContext _context;
-    private const string ScopeName = "_system";
+    private const string ScopeName = "system";
     private const string CollectionName = "refresh_tokens";
 
     public RefreshTokenRepository(CouchbaseContext context)

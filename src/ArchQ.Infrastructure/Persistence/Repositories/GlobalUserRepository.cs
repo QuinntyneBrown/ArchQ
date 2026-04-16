@@ -9,7 +9,7 @@ namespace ArchQ.Infrastructure.Persistence.Repositories;
 public class GlobalUserRepository : IGlobalUserRepository
 {
     private readonly CouchbaseContext _context;
-    private const string ScopeName = "_system";
+    private const string ScopeName = "system";
     private const string CollectionName = "global_users";
 
     public GlobalUserRepository(CouchbaseContext context)

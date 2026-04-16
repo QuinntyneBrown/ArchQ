@@ -7,7 +7,7 @@ namespace ArchQ.Infrastructure.Persistence.Repositories;
 public class VerificationTokenRepository : IVerificationTokenRepository
 {
     private readonly CouchbaseContext _context;
-    private const string ScopeName = "_system";
+    private const string ScopeName = "system";
     private const string CollectionName = "verification_tokens";
 
     public VerificationTokenRepository(CouchbaseContext context)

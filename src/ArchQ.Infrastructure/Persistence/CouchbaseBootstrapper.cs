@@ -6,7 +6,7 @@ public class CouchbaseBootstrapper
 {
     private readonly CouchbaseContext _context;
 
-    private const string SystemScope = "_system";
+    private const string SystemScope = "system";
 
     private static readonly string[] SystemCollections =
     [

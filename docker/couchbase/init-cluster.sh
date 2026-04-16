@@ -25,13 +25,13 @@ echo "Creating bucket..."
   --bucket-type couchbase \
   --bucket-ramsize 256
 
-echo "Creating _system scope..."
+echo "Creating system scope..."
 /opt/couchbase/bin/couchbase-cli collection-manage \
   -c localhost:8091 \
   -u Administrator \
   -p password123 \
   --bucket archq \
-  --create-scope _system
+  --create-scope system
 
 echo "Creating system collections..."
 /opt/couchbase/bin/couchbase-cli collection-manage \
@@ -39,13 +39,13 @@ echo "Creating system collections..."
   -u Administrator \
   -p password123 \
   --bucket archq \
-  --create-collection _system.tenants
+  --create-collection system.tenants
 
 /opt/couchbase/bin/couchbase-cli collection-manage \
   -c localhost:8091 \
   -u Administrator \
   -p password123 \
   --bucket archq \
-  --create-collection _system.global_users
+  --create-collection system.global_users
 
 echo "Couchbase initialization complete."

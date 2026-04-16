@@ -5,7 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TenantService } from '../../../core/services/tenant.service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
 
-const RESERVED_SLUGS = ['_system', '_default', 'admin', 'api', 'www', 'app'];
+const RESERVED_SLUGS = ['system', '_default', 'admin', 'api', 'www', 'app'];
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/;
 
 @Component({

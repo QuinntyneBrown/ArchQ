@@ -8,7 +8,7 @@ namespace ArchQ.Infrastructure.Persistence.Repositories;
 public class TenantRepository : ITenantRepository
 {
     private readonly CouchbaseContext _context;
-    private const string ScopeName = "_system";
+    private const string ScopeName = "system";
     private const string CollectionName = "tenants";
 
     public TenantRepository(CouchbaseContext context)
