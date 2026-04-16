@@ -32,7 +32,7 @@ export class AdrEditorComponent implements OnInit {
   readonly readOnly = computed(() => {
     const adr = this.existingAdr();
     if (!adr) return false;
-    const terminalStatuses = ['accepted', 'rejected', 'superseded', 'deprecated'];
+    const terminalStatuses = ['approved', 'rejected', 'superseded', 'deprecated'];
     return terminalStatuses.includes(adr.status);
   });
 
