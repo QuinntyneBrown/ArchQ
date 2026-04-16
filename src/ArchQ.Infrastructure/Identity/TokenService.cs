@@ -81,7 +81,7 @@ public class TokenService : ITokenService
     {
         try
         {
-            var handler = new JwtSecurityTokenHandler();
+            var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
             var principal = handler.ValidateToken(token, GetValidationParameters(), out _);
 
             return new AccessTokenPayload
@@ -103,7 +103,7 @@ public class TokenService : ITokenService
     {
         try
         {
-            var handler = new JwtSecurityTokenHandler();
+            var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
             var principal = handler.ValidateToken(token, GetValidationParameters(), out _);
 
             return new RefreshTokenPayload
