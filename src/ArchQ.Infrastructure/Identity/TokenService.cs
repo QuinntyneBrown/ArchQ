@@ -8,6 +8,8 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace ArchQ.Infrastructure.Identity;
 
+// TODO: Migrate from HS256 to RS256 for token signing. RS256 allows public-key verification
+// without sharing the signing secret, which is preferred for distributed / multi-service deployments.
 public class TokenService : ITokenService
 {
     private readonly string _secret;

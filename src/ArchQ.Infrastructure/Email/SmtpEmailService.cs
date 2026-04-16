@@ -34,4 +34,13 @@ public class SmtpEmailService : IEmailService
 
         return Task.CompletedTask;
     }
+
+    public Task SendAccountLockedEmailAsync(string email, string fullName)
+    {
+        _logger.LogWarning(
+            "Account locked notification for {Email} ({FullName}): Your account has been temporarily locked due to multiple failed login attempts.",
+            email, fullName);
+
+        return Task.CompletedTask;
+    }
 }

@@ -15,6 +15,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     private readonly ITokenService _tokenService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IAuditRepository _auditRepository;
+    private readonly IEmailService _emailService;
 
     private const int MaxFailedAttempts = 5;
     private static readonly TimeSpan FailedAttemptWindow = TimeSpan.FromMinutes(10);
@@ -27,7 +28,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         IPasswordHasher passwordHasher,
         ITokenService tokenService,
         IRefreshTokenRepository refreshTokenRepository,
-        IAuditRepository auditRepository)
+        IAuditRepository auditRepository,
+        IEmailService emailService)
     {
         _globalUserRepository = globalUserRepository;
         _userRepository = userRepository;
@@ -36,6 +38,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         _tokenService = tokenService;
         _refreshTokenRepository = refreshTokenRepository;
         _auditRepository = auditRepository;
+        _emailService = emailService;
     }
 
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -111,6 +114,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
                 user.LockedUntil = DateTime.UtcNow.Add(LockoutDuration);
                 user.FailedLoginAttempts = 0;
                 user.FirstFailedAttemptAt = null;
+
+                await _emailService.SendAccountLockedEmailAsync(user.Email, user.FullName);
             }
 
             await _userRepository.UpdateAsync(user, membership.TenantSlug);
@@ -152,12 +157,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
         await _auditRepository.WriteEntryAsync(new AuditEntry
         {
             TenantId = tenant.Id,
-            Action = "UserLoggedIn",
+            Action = "LOGIN_SUCCESS",
             EntityType = "User",
             EntityId = user.Id,
             UserId = user.Id,
             Timestamp = DateTime.UtcNow,
-            Details = $"User '{user.FullName}' logged in."
+            Details = $"User '{user.FullName}' logged in.",
+            IpAddress = request.IpAddress,
+            UserAgent = request.UserAgent
         });
 
         // Build memberships list

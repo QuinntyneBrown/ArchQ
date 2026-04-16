@@ -46,6 +46,9 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
+        command.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        command.UserAgent = Request.Headers.UserAgent.ToString();
+
         var response = await _mediator.Send(command);
 
         SetAuthCookies(response.AccessToken, response.RefreshToken);
@@ -72,7 +75,7 @@ public class AuthController : ControllerBase
 
         SetAuthCookies(response.AccessToken, response.RefreshToken);
 
-        return Ok(new { message = "Tokens refreshed." });
+        return Ok(new { message = "Token refreshed." });
     }
 
     [HttpPost("logout")]
@@ -87,7 +90,7 @@ public class AuthController : ControllerBase
 
         ClearAuthCookies();
 
-        return Ok(new { message = "Logged out successfully." });
+        return Ok(new { message = "Signed out successfully." });
     }
 
     [HttpGet("test/verification-token")]
@@ -127,7 +130,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = isSecure,
             SameSite = SameSiteMode.Strict,
-            Path = "/api/auth",
+            Path = "/api/auth/refresh",
             MaxAge = TimeSpan.FromDays(7)
         });
     }
@@ -149,7 +152,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = isSecure,
             SameSite = SameSiteMode.Strict,
-            Path = "/api/auth"
+            Path = "/api/auth/refresh"
         });
     }
 }
