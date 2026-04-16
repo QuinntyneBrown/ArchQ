@@ -54,8 +54,8 @@ public sealed class CouchbaseFixture : IAsyncDisposable
         // Create tenant scope + collections
         await CreateScopeAndCollections(mgr, TenantSlug, TenantCollections);
 
-        // Create _system scope for AuditRepository
-        await CreateScopeAndCollections(mgr, "_system", SystemCollections);
+        // Create system scope for AuditRepository
+        await CreateScopeAndCollections(mgr, "system", SystemCollections);
 
         // Wait for collections to be queryable
         await Task.Delay(5000);
@@ -83,7 +83,7 @@ public sealed class CouchbaseFixture : IAsyncDisposable
         }
 
         // Create indexes on _system scope
-        var systemScope = bucket.Scope("_system");
+        var systemScope = bucket.Scope("system");
         await CreateIndexWithRetry(systemScope, "CREATE PRIMARY INDEX IF NOT EXISTS ON `audit`");
         await CreateIndexWithRetry(systemScope, "CREATE INDEX `idx_bench_sys_audit_ts` IF NOT EXISTS ON `audit`(`timestamp`)");
 
@@ -135,7 +135,7 @@ public sealed class CouchbaseFixture : IAsyncDisposable
         {
             var bucket = await Context.GetBucketAsync();
             try { await bucket.Collections.DropScopeAsync(TenantSlug); } catch { }
-            try { await bucket.Collections.DropScopeAsync("_system"); } catch { }
+            try { await bucket.Collections.DropScopeAsync("system"); } catch { }
         }
         catch { /* best-effort cleanup */ }
 
