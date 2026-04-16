@@ -90,6 +90,16 @@ export class AdrListComponent implements OnInit {
     return name.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
   }
 
+  getAvatarColor(name: string): string {
+    if (!name) return '#374151';
+    const colors = ['#6366f1', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+  }
+
   formatDate(dateStr: string): string {
     if (!dateStr) return '';
     const d = new Date(dateStr);

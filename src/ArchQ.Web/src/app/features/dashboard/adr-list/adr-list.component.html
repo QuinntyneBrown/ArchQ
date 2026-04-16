@@ -130,7 +130,7 @@
                 </td>
                 <td>
                   <div class="author-cell">
-                    <span class="author-avatar">{{ getInitials(adr.authorName) }}</span>
+                    <span class="author-avatar" [style.background-color]="getAvatarColor(adr.authorName)">{{ getInitials(adr.authorName) }}</span>
                     <span class="author-name">{{ adr.authorName || 'Unknown' }}</span>
                   </div>
                 </td>
@@ -158,7 +158,7 @@
             <div class="card-title">{{ adr.title }}</div>
             <div class="card-bottom-row">
               <div class="author-cell">
-                <span class="author-avatar author-avatar-sm">{{ getInitials(adr.authorName) }}</span>
+                <span class="author-avatar author-avatar-sm" [style.background-color]="getAvatarColor(adr.authorName)">{{ getInitials(adr.authorName) }}</span>
                 <span class="card-author">{{ adr.authorName || 'Unknown' }}</span>
               </div>
               <span class="card-date">{{ formatDate(adr.updatedAt) }}</span>

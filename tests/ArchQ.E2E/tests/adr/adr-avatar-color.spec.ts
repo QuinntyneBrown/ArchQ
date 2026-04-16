@@ -12,7 +12,7 @@ test.describe('ADR Author Avatar Color', () => {
 
     await context.request.post('http://localhost:5299/api/auth/register', {
       data: { fullName: 'Quinn Brown', email, password: 'S3cur3P@ss!', organizationName: `AvCorp${ts}` },
-      timeout: 30000,
+      timeout: 60000,
     });
     const r = await context.request.get(`http://localhost:5299/api/auth/test/verification-token?email=${encodeURIComponent(email)}`);
     const { token } = await r.json();
