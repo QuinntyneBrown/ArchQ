@@ -14,10 +14,10 @@
 | 10 | [ADR Workflow](10-adr-workflow/README.md) | Complete | L2-010, L2-011 | Status transitions, state machine, notifications |
 | 11 | [Approver Assignment](11-approver-assignment/README.md) | Complete | L2-012 | Assign reviewers when submitting for review |
 | 12 | [Approval Decisions](12-approval-decisions/README.md) | Complete | L2-013, L2-014 | Record approve/reject decisions, threshold enforcement |
-| 13 | [Meeting Notes](13-meeting-notes/README.md) | Draft | L2-015 | Attach meeting notes with title, date, attendees |
-| 14 | [General Notes](14-general-notes/README.md) | Draft | L2-016 | Attach Markdown notes to ADRs |
-| 15 | [Threaded Comments](15-threaded-comments/README.md) | Draft | L2-017 | Add threaded, Markdown-formatted comments |
-| 16 | [Document Attachments](16-document-attachments/README.md) | Draft | L2-018 | Upload architecture documents (PDF, PNG, SVG, etc.) |
+| 13 | [Meeting Notes](13-meeting-notes/README.md) | Complete | L2-015 | Attach meeting notes with title, date, attendees |
+| 14 | [General Notes](14-general-notes/README.md) | Complete | L2-016 | Attach Markdown notes to ADRs |
+| 15 | [Threaded Comments](15-threaded-comments/README.md) | Complete | L2-017 | Add threaded, Markdown-formatted comments |
+| 16 | [Document Attachments](16-document-attachments/README.md) | Complete | L2-018 | Upload architecture documents (PDF, PNG, SVG, etc.) |
 | 17 | [ADR Tagging](17-adr-tagging/README.md) | Draft | L2-021 | Tag management with autocomplete suggestions |
 | 18 | [Version History & Diff](18-version-history/README.md) | Draft | L2-023 | View and compare ADR content versions |
 | 19 | [Audit Trail](19-audit-trail/README.md) | Draft | L2-022 | Immutable audit log for all ADR changes |
