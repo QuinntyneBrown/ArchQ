@@ -190,7 +190,7 @@ public class AdrRepository : IAdrRepository
         if (!string.IsNullOrEmpty(listParams.Status))
         {
             whereClauses.Add("a.status = $status");
-            queryOptions.Parameter("status", listParams.Status);
+            queryOptions.Parameter("status", listParams.Status.ToLowerInvariant());
         }
 
         if (!string.IsNullOrEmpty(listParams.AuthorId))
