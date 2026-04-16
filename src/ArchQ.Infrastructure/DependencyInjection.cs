@@ -1,5 +1,6 @@
 using ArchQ.Core.Interfaces;
 using ArchQ.Infrastructure.Email;
+using ArchQ.Infrastructure.FileStorage;
 using ArchQ.Infrastructure.Identity;
 using ArchQ.Infrastructure.Persistence;
 using ArchQ.Infrastructure.Persistence.Configuration;
@@ -35,6 +36,12 @@ public static class DependencyInjection
         services.AddScoped<IAdrVersionRepository, AdrVersionRepository>();
         services.AddScoped<IConfigRepository, ConfigRepository>();
         services.AddScoped<ISearchService, N1qlSearchService>();
+
+        services.AddScoped<IMeetingNoteRepository, MeetingNoteRepository>();
+        services.AddScoped<IGeneralNoteRepository, GeneralNoteRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+        services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
         return services;
     }
