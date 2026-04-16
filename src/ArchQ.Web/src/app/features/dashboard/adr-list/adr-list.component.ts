@@ -5,7 +5,7 @@ import { NgClass } from '@angular/common';
 import { AdrService } from '../../../core/services/adr.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../shared/components/toast/toast.service';
-import { AdrSummary } from '../../../core/models/adr.model';
+import { AdrSummary, SearchResultItem } from '../../../core/models/adr.model';
 
 @Component({
   selector: 'app-adr-list',
@@ -64,14 +64,45 @@ import { AdrSummary } from '../../../core/models/adr.model';
         }
 
         <!-- Empty State -->
-        @if (!loading() && adrs().length === 0) {
+        @if (!loading() && !isSearchMode() && adrs().length === 0) {
           <div class="empty-state">
             <p class="muted-text">No ADRs found. Create your first Architecture Decision Record.</p>
           </div>
         }
 
+        <!-- Search Results -->
+        @if (!loading() && isSearchMode()) {
+          @if (searchResults().length === 0) {
+            <div class="empty-state">
+              <p class="muted-text">No results found for your search.</p>
+            </div>
+          } @else {
+            <div class="search-results-header">
+              <span class="muted-text">{{ searchTotalHits() }} result{{ searchTotalHits() !== 1 ? 's' : '' }} found</span>
+            </div>
+            <div class="search-results-list">
+              @for (result of searchResults(); track result.id) {
+                <div
+                  class="search-result-item"
+                  data-testid="search-result"
+                  (click)="navigateToAdr(result.id)"
+                >
+                  <div class="search-result-top">
+                    <span class="card-number">{{ result.adrNumber }}</span>
+                    <span class="status-badge" [ngClass]="getStatusClass(result.status)">{{ result.status }}</span>
+                  </div>
+                  <div class="search-result-title" [innerHTML]="result.title"></div>
+                  @if (result.snippet) {
+                    <div class="search-result-snippet" [innerHTML]="result.snippet"></div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+
         <!-- Desktop Table -->
-        @if (!loading() && adrs().length > 0) {
+        @if (!loading() && !isSearchMode() && adrs().length > 0) {
           <div class="table-wrapper">
             <table class="adr-table" data-testid="adr-table">
               <thead>
@@ -117,7 +148,7 @@ import { AdrSummary } from '../../../core/models/adr.model';
         }
 
         <!-- Mobile Cards -->
-        @if (!loading() && adrs().length > 0) {
+        @if (!loading() && !isSearchMode() && adrs().length > 0) {
           <div class="card-list">
             @for (adr of adrs(); track adr.id) {
               <div
@@ -143,7 +174,7 @@ import { AdrSummary } from '../../../core/models/adr.model';
         }
 
         <!-- Pagination -->
-        @if (!loading() && (prevCursor() || nextCursor())) {
+        @if (!loading() && !isSearchMode() && (prevCursor() || nextCursor())) {
           <div class="pagination-row">
             <button
               class="btn-page"
@@ -460,6 +491,56 @@ import { AdrSummary } from '../../../core/models/adr.model';
       font-size: 0.8125rem;
     }
 
+    /* Search Results */
+    .search-results-header {
+      margin-bottom: 0.75rem;
+    }
+    .search-results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .search-result-item {
+      background-color: #252836;
+      border: 1px solid #2a2d3e;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    .search-result-item:hover {
+      background-color: #2a2d3e;
+    }
+    .search-result-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .search-result-title {
+      color: #ffffff;
+      font-weight: 500;
+      font-size: 0.9375rem;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+    .search-result-title ::ng-deep mark,
+    .search-result-snippet ::ng-deep mark {
+      background-color: rgba(37, 99, 235, 0.3);
+      color: #93c5fd;
+      padding: 0 0.125rem;
+      border-radius: 0.125rem;
+    }
+    .search-result-snippet {
+      color: #9ca3af;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
     /* Loading / Empty */
     .loading-state, .empty-state {
       padding: 3rem 1rem;
@@ -531,6 +612,9 @@ export class AdrListComponent implements OnInit {
   readonly nextCursor = signal<string | null>(null);
   readonly prevCursor = signal<string | null>(null);
   readonly totalCount = signal(0);
+  readonly searchResults = signal<SearchResultItem[]>([]);
+  readonly isSearchMode = signal(false);
+  readonly searchTotalHits = signal(0);
 
   searchTerm = '';
   selectedStatus = 'All';
@@ -549,7 +633,11 @@ export class AdrListComponent implements OnInit {
   }
 
   onFilterChange(): void {
-    this.loadAdrs();
+    if (this.isSearchMode() && this.searchTerm.trim().length >= 2) {
+      this.performSearch();
+    } else {
+      this.loadAdrs();
+    }
   }
 
   onSearchChange(): void {
@@ -557,7 +645,13 @@ export class AdrListComponent implements OnInit {
       clearTimeout(this.searchTimeout);
     }
     this.searchTimeout = setTimeout(() => {
-      this.loadAdrs();
+      if (this.searchTerm.trim().length >= 2) {
+        this.performSearch();
+      } else {
+        this.isSearchMode.set(false);
+        this.searchResults.set([]);
+        this.loadAdrs();
+      }
     }, 300);
   }
 
@@ -590,6 +684,30 @@ export class AdrListComponent implements OnInit {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  private performSearch(): void {
+    const tenant = this.authService.currentTenant();
+    if (!tenant) {
+      this.toastService.show('No tenant selected', 'error');
+      return;
+    }
+
+    this.loading.set(true);
+    const statusFilter = this.selectedStatus !== 'All' ? this.selectedStatus : undefined;
+
+    this.adrService.searchAdrs(tenant.slug, this.searchTerm.trim(), statusFilter).subscribe({
+      next: (response) => {
+        this.searchResults.set(response.results);
+        this.searchTotalHits.set(response.totalHits);
+        this.isSearchMode.set(true);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.toastService.show('Search failed', 'error');
+        this.loading.set(false);
+      }
+    });
   }
 
   private loadAdrs(cursor?: string): void {

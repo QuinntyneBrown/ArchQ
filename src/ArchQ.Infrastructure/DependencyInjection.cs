@@ -4,6 +4,7 @@ using ArchQ.Infrastructure.Identity;
 using ArchQ.Infrastructure.Persistence;
 using ArchQ.Infrastructure.Persistence.Configuration;
 using ArchQ.Infrastructure.Persistence.Repositories;
+using ArchQ.Infrastructure.Search;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IAdrRepository, AdrRepository>();
         services.AddScoped<IAdrVersionRepository, AdrVersionRepository>();
         services.AddScoped<IConfigRepository, ConfigRepository>();
+        services.AddScoped<ISearchService, N1qlSearchService>();
 
         return services;
     }

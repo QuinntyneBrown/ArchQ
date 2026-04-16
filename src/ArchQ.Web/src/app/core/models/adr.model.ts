@@ -76,3 +76,18 @@ export interface AdrListParams {
   cursor?: string;
   limit?: number;
 }
+
+export interface SearchResultItem {
+  id: string;
+  adrNumber: string;
+  title: string;
+  status: string;
+  score: number;
+  snippet: string;
+}
+
+export interface SearchResponse {
+  results: SearchResultItem[];
+  totalHits: number;
+  took: number;
+}

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AdrResponse, AdrDetailResponse, CreateAdrRequest, UpdateAdrRequest, UpdateAdrResponse, TemplateResponse, AdrListResponse, AdrListParams } from '../models/adr.model';
+import { AdrResponse, AdrDetailResponse, CreateAdrRequest, UpdateAdrRequest, UpdateAdrResponse, TemplateResponse, AdrListResponse, AdrListParams, SearchResponse } from '../models/adr.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdrService {
@@ -43,5 +43,22 @@ export class AdrService {
 
   getTemplate(tenantSlug: string): Observable<TemplateResponse> {
     return this.http.get<TemplateResponse>(`${this.API_URL}/${tenantSlug}/config/template`, { withCredentials: true });
+  }
+
+  searchAdrs(tenantSlug: string, query: string, status?: string, pageSize?: number, offset?: number): Observable<SearchResponse> {
+    const queryParams: Record<string, string> = { q: query };
+    if (status) {
+      queryParams['status'] = status;
+    }
+    if (pageSize !== undefined) {
+      queryParams['pageSize'] = pageSize.toString();
+    }
+    if (offset !== undefined) {
+      queryParams['offset'] = offset.toString();
+    }
+    return this.http.get<SearchResponse>(`${this.API_URL}/${tenantSlug}/search`, {
+      params: queryParams,
+      withCredentials: true
+    });
   }
 }
