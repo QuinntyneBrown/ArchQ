@@ -8,4 +8,6 @@ public interface IAdrRepository
     Task<Adr?> GetByIdAsync(string id, string tenantSlug);
     Task<int> GetMaxAdrNumberAsync(string tenantSlug);
     Task<Adr> UpdateAsync(Adr adr, string tenantSlug);
+    Task<AdrListResult> ListAsync(AdrListParams listParams, string tenantSlug);
+    Task<int> CountAsync(AdrListParams filters, string tenantSlug);
 }

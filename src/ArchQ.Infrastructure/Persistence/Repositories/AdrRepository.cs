@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using ArchQ.Core.Entities;
 using ArchQ.Core.Interfaces;
 using Couchbase.Core.Exceptions.KeyValue;
@@ -11,6 +13,11 @@ public class AdrRepository : IAdrRepository
     private readonly CouchbaseContext _context;
     private const string CollectionName = "adrs";
     private const int MaxCasRetries = 3;
+
+    private static readonly HashSet<string> AllowedSortFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "updatedAt", "createdAt", "adrNumber", "title", "status"
+    };
 
     public AdrRepository(CouchbaseContext context)
     {
@@ -77,6 +84,157 @@ public class AdrRepository : IAdrRepository
         }
 
         throw new InvalidOperationException("Failed to update ADR after maximum CAS retries.");
+    }
+
+    public async Task<AdrListResult> ListAsync(AdrListParams listParams, string tenantSlug)
+    {
+        var scope = await _context.GetScopeAsync(tenantSlug);
+        var queryOptions = new QueryOptions();
+
+        var whereClauses = new List<string> { "a.type = \"adr\"" };
+        BuildFilterClauses(listParams, whereClauses, queryOptions);
+
+        var sortField = AllowedSortFields.Contains(listParams.SortField) ? listParams.SortField : "updatedAt";
+        var sortDir = string.Equals(listParams.SortDirection, "asc", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC";
+
+        // Decode cursor and add pagination WHERE clause
+        if (!string.IsNullOrEmpty(listParams.Cursor))
+        {
+            try
+            {
+                var cursorJson = Encoding.UTF8.GetString(Convert.FromBase64String(listParams.Cursor));
+                var cursor = JsonSerializer.Deserialize<CursorData>(cursorJson);
+                if (cursor != null)
+                {
+                    var op = sortDir == "ASC" ? ">" : "<";
+                    whereClauses.Add($"(a.{sortField} {op} $cursorSortValue OR (a.{sortField} = $cursorSortValue AND META(a).id {op} $cursorDocId))");
+                    queryOptions.Parameter("cursorSortValue", cursor.SortValue);
+                    queryOptions.Parameter("cursorDocId", cursor.DocId);
+                }
+            }
+            catch
+            {
+                // Invalid cursor — ignore and return from the start
+            }
+        }
+
+        var whereClause = string.Join(" AND ", whereClauses);
+        var fetchLimit = listParams.PageSize + 1;
+
+        var query = $"SELECT a.id, a.adrNumber, a.title, a.status, a.authorId, a.tags, a.updatedAt FROM `{CollectionName}` a WHERE {whereClause} ORDER BY a.{sortField} {sortDir}, META(a).id {sortDir} LIMIT {fetchLimit}";
+
+        var result = await scope.QueryAsync<AdrSummary>(query, queryOptions);
+        var items = new List<AdrSummary>();
+        await foreach (var row in result.Rows)
+        {
+            items.Add(row);
+        }
+
+        string? nextCursor = null;
+        if (items.Count > listParams.PageSize)
+        {
+            items.RemoveAt(items.Count - 1);
+            var lastItem = items[^1];
+            var cursorData = new CursorData
+            {
+                SortValue = GetSortValue(lastItem, sortField),
+                DocId = lastItem.Id
+            };
+            nextCursor = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(cursorData)));
+        }
+
+        // PrevCursor: if a cursor was provided, the first item can serve as prev reference
+        string? prevCursor = null;
+        if (!string.IsNullOrEmpty(listParams.Cursor) && items.Count > 0)
+        {
+            var firstItem = items[0];
+            var cursorData = new CursorData
+            {
+                SortValue = GetSortValue(firstItem, sortField),
+                DocId = firstItem.Id
+            };
+            prevCursor = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(cursorData)));
+        }
+
+        return new AdrListResult
+        {
+            Items = items,
+            NextCursor = nextCursor,
+            PrevCursor = prevCursor,
+            TotalCount = 0 // Caller will use CountAsync separately
+        };
+    }
+
+    public async Task<int> CountAsync(AdrListParams filters, string tenantSlug)
+    {
+        var scope = await _context.GetScopeAsync(tenantSlug);
+        var queryOptions = new QueryOptions();
+
+        var whereClauses = new List<string> { "a.type = \"adr\"" };
+        BuildFilterClauses(filters, whereClauses, queryOptions);
+
+        var whereClause = string.Join(" AND ", whereClauses);
+        var query = $"SELECT COUNT(*) AS cnt FROM `{CollectionName}` a WHERE {whereClause}";
+
+        var result = await scope.QueryAsync<dynamic>(query, queryOptions);
+        await foreach (var row in result.Rows)
+        {
+            return (int)(long)row.cnt;
+        }
+
+        return 0;
+    }
+
+    private static void BuildFilterClauses(AdrListParams listParams, List<string> whereClauses, QueryOptions queryOptions)
+    {
+        if (!string.IsNullOrEmpty(listParams.Status))
+        {
+            whereClauses.Add("a.status = $status");
+            queryOptions.Parameter("status", listParams.Status);
+        }
+
+        if (!string.IsNullOrEmpty(listParams.AuthorId))
+        {
+            whereClauses.Add("a.authorId = $authorId");
+            queryOptions.Parameter("authorId", listParams.AuthorId);
+        }
+
+        if (listParams.Tags is { Count: > 0 })
+        {
+            whereClauses.Add("ANY t IN a.tags SATISFIES t IN $tags END");
+            queryOptions.Parameter("tags", listParams.Tags);
+        }
+
+        if (listParams.DateFrom.HasValue)
+        {
+            whereClauses.Add("a.updatedAt >= $dateFrom");
+            queryOptions.Parameter("dateFrom", listParams.DateFrom.Value.ToString("o"));
+        }
+
+        if (listParams.DateTo.HasValue)
+        {
+            whereClauses.Add("a.updatedAt <= $dateTo");
+            queryOptions.Parameter("dateTo", listParams.DateTo.Value.ToString("o"));
+        }
+    }
+
+    private static string GetSortValue(AdrSummary item, string sortField)
+    {
+        return sortField.ToLowerInvariant() switch
+        {
+            "updatedat" => item.UpdatedAt.ToString("o"),
+            "createdat" => item.UpdatedAt.ToString("o"), // summaries only carry UpdatedAt
+            "adrnumber" => item.AdrNumber,
+            "title" => item.Title,
+            "status" => item.Status,
+            _ => item.UpdatedAt.ToString("o")
+        };
+    }
+
+    private class CursorData
+    {
+        public string SortValue { get; set; } = string.Empty;
+        public string DocId { get; set; } = string.Empty;
     }
 
     public async Task<int> GetMaxAdrNumberAsync(string tenantSlug)

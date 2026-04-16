@@ -66,6 +66,27 @@ public class UserRepository : IUserRepository
         return user;
     }
 
+    public async Task<Dictionary<string, User>> GetByIdsAsync(List<string> ids, string tenantSlug)
+    {
+        var result = new Dictionary<string, User>();
+        if (ids.Count == 0) return result;
+
+        var scope = await _context.GetScopeAsync(tenantSlug);
+        var query = $"SELECT u.* FROM `{CollectionName}` u WHERE u.id IN $ids";
+        var queryOptions = new QueryOptions().Parameter("ids", ids);
+        var queryResult = await scope.QueryAsync<User>(query, queryOptions);
+
+        await foreach (var row in queryResult.Rows)
+        {
+            if (row != null && !string.IsNullOrEmpty(row.Id))
+            {
+                result[row.Id] = row;
+            }
+        }
+
+        return result;
+    }
+
     public async Task<int> CountByRoleAsync(string role, string tenantSlug)
     {
         var scope = await _context.GetScopeAsync(tenantSlug);

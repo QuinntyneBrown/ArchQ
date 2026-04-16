@@ -2,6 +2,7 @@ using ArchQ.Application.Adrs.Commands.CreateAdr;
 using ArchQ.Application.Adrs.Commands.UpdateAdr;
 using ArchQ.Application.Adrs.DTOs;
 using ArchQ.Application.Adrs.Queries.GetAdrById;
+using ArchQ.Application.Adrs.Queries.ListAdrs;
 using ArchQ.Core.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,51 @@ public class AdrsController : ControllerBase
     {
         _mediator = mediator;
         _tokenService = tokenService;
+    }
+
+    /// <summary>
+    /// GET /api/tenants/{tenantSlug}/adrs
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(AdrListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ListAdrs(
+        string tenantSlug,
+        [FromQuery] string? status,
+        [FromQuery] string? authorId,
+        [FromQuery] string? tags,
+        [FromQuery] DateTime? dateFrom,
+        [FromQuery] DateTime? dateTo,
+        [FromQuery] string? sortField,
+        [FromQuery] string? sortDirection,
+        [FromQuery] string? cursor,
+        [FromQuery] int? pageSize)
+    {
+        var claims = GetAccessTokenClaims();
+        if (claims is null)
+        {
+            return Unauthorized(new { code = "INVALID_TOKEN", message = "Access token is missing or invalid." });
+        }
+
+        var parsedTags = !string.IsNullOrEmpty(tags)
+            ? tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+            : null;
+
+        var response = await _mediator.Send(new ListAdrsQuery
+        {
+            TenantSlug = tenantSlug,
+            Status = status,
+            AuthorId = authorId,
+            Tags = parsedTags,
+            DateFrom = dateFrom,
+            DateTo = dateTo,
+            SortField = sortField ?? "updatedAt",
+            SortDirection = sortDirection ?? "desc",
+            Cursor = cursor,
+            PageSize = pageSize ?? 25
+        });
+
+        return Ok(response);
     }
 
     /// <summary>

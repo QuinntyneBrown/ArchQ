@@ -50,3 +50,29 @@ export interface TemplateResponse {
   isCustom: boolean;
   updatedAt: string | null;
 }
+
+export interface AdrSummary {
+  id: string;
+  adrNumber: string;
+  title: string;
+  status: string;
+  authorId: string;
+  authorName: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdrListResponse {
+  items: AdrSummary[];
+  nextCursor: string | null;
+  prevCursor: string | null;
+  totalCount: number;
+}
+
+export interface AdrListParams {
+  status?: string;
+  search?: string;
+  cursor?: string;
+  limit?: number;
+}
