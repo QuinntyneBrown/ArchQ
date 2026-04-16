@@ -52,26 +52,37 @@ import { Tenant } from '../../../core/models/tenant.model';
   styles: [`
     .tenant-detail-container {
       max-width: 40rem;
-      margin: 2rem auto;
-      padding: 2rem;
+      margin: 3rem auto;
+      padding: 2rem 2.5rem;
+      background-color: #1a1d2e;
+      border: 1px solid #2a2d3e;
+      border-radius: 0.75rem;
     }
     .not-found, .loading {
       max-width: 40rem;
-      margin: 2rem auto;
-      padding: 2rem;
+      margin: 3rem auto;
+      padding: 2rem 2.5rem;
       text-align: center;
       color: #6b7280;
+      background-color: #1a1d2e;
+      border: 1px solid #2a2d3e;
+      border-radius: 0.75rem;
     }
     .detail-row {
       display: flex;
       align-items: center;
       gap: 1rem;
       padding: 0.75rem 0;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #2a2d3e;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
     }
     .label {
-      font-weight: 600;
+      font-weight: 500;
+      font-size: 0.875rem;
       min-width: 5rem;
+      color: #9ca3af;
     }
     .edit-row {
       display: flex;
@@ -79,10 +90,16 @@ import { Tenant } from '../../../core/models/tenant.model';
       gap: 0.5rem;
     }
     .edit-row input {
-      padding: 0.375rem 0.75rem;
-      border: 1px solid #d1d5db;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid #3a3f54;
       border-radius: 0.375rem;
-      font-size: 1rem;
+      font-size: 0.875rem;
+      background-color: #252836;
+      color: #ffffff;
+      outline: none;
+    }
+    .edit-row input:focus {
+      border-color: #2563eb;
     }
     .btn-primary {
       padding: 0.375rem 0.75rem;
@@ -91,23 +108,46 @@ import { Tenant } from '../../../core/models/tenant.model';
       border: none;
       border-radius: 0.375rem;
       cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background-color 0.15s ease;
+    }
+    .btn-primary:hover {
+      background-color: #1d4ed8;
     }
     .btn-secondary {
       padding: 0.375rem 0.75rem;
-      background-color: #fff;
-      color: #374151;
-      border: 1px solid #d1d5db;
+      background-color: transparent;
+      color: #9ca3af;
+      border: 1px solid #3a3f54;
       border-radius: 0.375rem;
       cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: border-color 0.15s ease;
+    }
+    .btn-secondary:hover {
+      border-color: #6b7280;
     }
     .btn-icon {
       padding: 0.25rem 0.5rem;
-      background: none;
-      border: 1px solid #d1d5db;
+      background: transparent;
+      border: 1px solid #3a3f54;
       border-radius: 0.375rem;
       cursor: pointer;
-      color: #2563eb;
+      color: #3b82f6;
       font-size: 0.875rem;
+      transition: border-color 0.15s ease;
+    }
+    .btn-icon:hover {
+      border-color: #3b82f6;
+    }
+    @media (max-width: 640px) {
+      .tenant-detail-container {
+        margin: 1rem;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+      }
     }
   `]
 })

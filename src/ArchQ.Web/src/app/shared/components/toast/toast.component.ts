@@ -22,17 +22,20 @@ import { ToastService } from './toast.service';
       top: 1rem;
       right: 1rem;
       padding: 0.75rem 1.5rem;
-      border-radius: 0.375rem;
-      color: #fff;
+      border-radius: 0.5rem;
+      color: #ffffff;
       font-weight: 500;
+      font-size: 0.875rem;
       z-index: 9999;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      background-color: #1a1d2e;
+      border: 1px solid #2a2d3e;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
     .toast-success {
-      background-color: #16a34a;
+      border-left: 3px solid #22c55e;
     }
     .toast-error {
-      background-color: #dc2626;
+      border-left: 3px solid #ef4444;
     }
   `]
 })

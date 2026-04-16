@@ -76,28 +76,47 @@ const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/;
   `,
   styles: [`
     .tenant-create-container {
-      max-width: 32rem;
-      margin: 2rem auto;
-      padding: 2rem;
+      max-width: 28rem;
+      margin: 3rem auto;
+      padding: 2rem 2.5rem;
+      background-color: #1a1d2e;
+      border: 1px solid #2a2d3e;
+      border-radius: 0.75rem;
     }
     h1 {
       margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #ffffff;
+      text-align: center;
     }
     .form-group {
       margin-bottom: 1rem;
     }
     label {
       display: block;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.375rem;
       font-weight: 500;
+      font-size: 0.875rem;
+      color: #d1d5db;
     }
     input {
       width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #d1d5db;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid #3a3f54;
       border-radius: 0.375rem;
-      font-size: 1rem;
+      font-size: 0.875rem;
       box-sizing: border-box;
+      background-color: #252836;
+      color: #ffffff;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    input::placeholder {
+      color: #6b7280;
+    }
+    input:focus {
+      border-color: #2563eb;
     }
     .slug-preview {
       margin-top: 0.25rem;
@@ -107,15 +126,15 @@ const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/;
     .field-error {
       margin-top: 0.25rem;
       font-size: 0.875rem;
-      color: #dc2626;
+      color: #ef4444;
     }
     .error-banner {
       padding: 0.75rem 1rem;
       margin-bottom: 1rem;
-      background-color: #fef2f2;
-      border: 1px solid #fecaca;
+      background-color: rgba(239, 68, 68, 0.1);
+      border: 1px solid #ef4444;
       border-radius: 0.375rem;
-      color: #dc2626;
+      color: #ef4444;
     }
     .form-actions {
       display: flex;
@@ -123,26 +142,46 @@ const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/;
       margin-top: 1.5rem;
     }
     .btn-primary {
-      padding: 0.5rem 1.25rem;
+      padding: 0.625rem 1.25rem;
       background-color: #2563eb;
       color: #fff;
       border: none;
       border-radius: 0.375rem;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background-color 0.15s ease;
+    }
+    .btn-primary:hover {
+      background-color: #1d4ed8;
     }
     .btn-primary:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
     .btn-secondary {
-      padding: 0.5rem 1.25rem;
-      background-color: #fff;
-      color: #374151;
-      border: 1px solid #d1d5db;
+      padding: 0.625rem 1.25rem;
+      background-color: transparent;
+      color: #9ca3af;
+      border: 1px solid #3a3f54;
       border-radius: 0.375rem;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: border-color 0.15s ease;
+    }
+    .btn-secondary:hover {
+      border-color: #6b7280;
+    }
+    @media (max-width: 640px) {
+      .tenant-create-container {
+        margin: 1rem;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+      }
+      .form-actions {
+        flex-direction: column;
+      }
     }
   `]
 })
