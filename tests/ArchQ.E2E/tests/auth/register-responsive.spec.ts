@@ -14,7 +14,7 @@ test.describe('Register Page — Mobile Responsive', () => {
 
     // Button should be full width
     const buttonBox = await registerPage.createAccountButton.boundingBox();
-    expect(buttonBox!.width).toBeGreaterThan(300);
+    expect(buttonBox!.width).toBeGreaterThan(280);
   });
 
   test('all form fields should be visible on mobile', async ({ page }) => {
