@@ -426,9 +426,11 @@
   .title-cell {
     max-width: 12rem;
   }
-  .adr-table th,
+  .adr-table th {
+    padding: 0.625rem 1rem;
+  }
   .adr-table td {
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 1rem;
   }
   .author-name {
     max-width: 6rem;
@@ -443,9 +445,11 @@
   .title-cell {
     max-width: 10rem;
   }
-  .adr-table th,
+  .adr-table th {
+    padding: 0.625rem 1rem;
+  }
   .adr-table td {
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 1rem;
   }
   .adr-table th:nth-child(5),
   .adr-table td:nth-child(5) {
