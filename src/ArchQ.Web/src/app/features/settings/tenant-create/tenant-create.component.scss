@@ -39,7 +39,7 @@ input::placeholder {
   color: #6b7280;
 }
 input:focus {
-  border-color: #2563eb;
+  border-color: #0062FF;
 }
 .slug-preview {
   margin-top: 0.25rem;
@@ -66,7 +66,7 @@ input:focus {
 }
 .btn-primary {
   padding: 0.625rem 1.25rem;
-  background-color: #2563eb;
+  background-color: #0062FF;
   color: #fff;
   border: none;
   border-radius: 0.375rem;
@@ -76,7 +76,7 @@ input:focus {
   transition: background-color 0.15s ease;
 }
 .btn-primary:hover {
-  background-color: #1d4ed8;
+  background-color: #0052D9;
 }
 .btn-primary:disabled {
   opacity: 0.6;

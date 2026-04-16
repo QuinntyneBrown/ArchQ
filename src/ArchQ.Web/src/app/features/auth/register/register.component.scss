@@ -23,7 +23,7 @@
 .logo-icon {
   width: 2rem;
   height: 2rem;
-  color: #3b82f6;
+  color: #0062FF;
 }
 .logo-text {
   font-size: 1.5rem;
@@ -63,7 +63,7 @@ input::placeholder {
   color: #6b7280;
 }
 input:focus {
-  border-color: #2563eb;
+  border-color: #0062FF;
 }
 .password-strength {
   height: 4px;
@@ -103,7 +103,7 @@ input:focus {
   width: 100%;
   padding: 0.625rem 1.25rem;
   margin-top: 1.5rem;
-  background-color: #2563eb;
+  background-color: #0062FF;
   color: #fff;
   border: none;
   border-radius: 0.375rem;
@@ -113,7 +113,7 @@ input:focus {
   transition: background-color 0.15s ease;
 }
 .btn-primary:hover {
-  background-color: #1d4ed8;
+  background-color: #0052D9;
 }
 .btn-primary:disabled {
   opacity: 0.6;
@@ -126,7 +126,7 @@ input:focus {
   color: #9ca3af;
 }
 .sign-in-prompt a {
-  color: #3b82f6;
+  color: #0062FF;
   text-decoration: none;
 }
 .sign-in-prompt a:hover {
